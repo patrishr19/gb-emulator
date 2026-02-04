@@ -1,0 +1,46 @@
+#ifndef CPU_H
+#define CPU_H
+
+#include <setup.h>
+
+typedef struct {
+    // register pairs https://gbdev.io/pandocs/CPU_Registers_and_Flags.html
+
+    union {
+        struct {
+            uint8_t f;
+            uint8_t a;
+        };
+        uint16_t af;
+    };
+
+    union {
+        struct {
+            uint8_t c;
+            uint8_t b;
+        };
+        uint16_t bc;
+    };
+
+    union {
+        struct {
+            uint8_t e;
+            uint8_t d;
+        };
+        uint16_t de;
+    };
+
+    union {
+        struct {
+            uint8_t l;
+            uint8_t h;      
+        };
+        uint16_t hl;
+    };
+
+    uint16_t sp;
+    uint16_t pc;
+} CPU;
+
+
+#endif
