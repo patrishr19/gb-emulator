@@ -2,14 +2,34 @@
 #include <emulator.h>
 #include <rom.h>
 int main() {
-    Bus bus = {0};
+    Gameboy gb = {0};
 
-    if (LoadRom(&bus, "testRoms/tetrisgame.gb")) {
+    CPUInit(&gb.cpu);
+
+    bool running = false;
+
+    // printf("CPU init done, pc register at: 0x%04X\n", cpu.pc);
+
+    if (LoadRom(&gb.bus, "testRoms/tetrisgame.gb")) {
         printf("Game: ");
-        for (uint16_t i = 0x0134; i <= 0x0143; i++) {
-            printf("%c", bus.memory[i]);
+        for (uint16_t i = 0x0134; i <= 0x0143; i++) { // 16 chars
+            printf("%c", gb.bus.memory[i]);
         }
         printf("\n");
+
+
+        running = true;
+    } else {
+        running = false;
     }
+
+    while (running) {
+        getchar();
+
+        int cycles = CPUStep(&gb.cpu, &gb.bus);
+
+        printf("next pc: 0x%04X | sp: 0x%04X\n, cycles: %d", gb.cpu.pc, gb.cpu.sp, cycles);
+    }
+
     return 0;
 }
