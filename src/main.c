@@ -28,7 +28,7 @@ int main() {
 
         int cycles = CPUStep(&gb.cpu, &gb.bus);
 
-        printf("next pc: 0x%04X | sp: 0x%04X\n, cycles: %d", gb.cpu.pc, gb.cpu.sp, cycles);
+        printf("next pc: 0x%04X | sp: 0x%04X, cycles: %d\n", gb.cpu.pc, gb.cpu.sp, cycles);
     }
 
     return 0;
