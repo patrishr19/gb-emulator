@@ -7,5 +7,7 @@ typedef struct {
     uint8_t memory[0x10000];
 } Bus;
 
+uint8_t BusRead(Bus *bus, uint16_t address);
+
 
 #endif
