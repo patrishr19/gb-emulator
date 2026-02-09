@@ -18,3 +18,8 @@ uint8_t BusRead(Bus *bus, uint16_t address) {
     return 0xFF;
     
 }
+void BusWrite(Bus *bus, uint16_t address, uint8_t value) {
+    if (address >= 0x0000 && address <= 0xFFFF) {
+        bus->memory[address] = value;
+    }
+}

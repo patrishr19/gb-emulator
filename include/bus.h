@@ -8,6 +8,6 @@ typedef struct {
 } Bus;
 
 uint8_t BusRead(Bus *bus, uint16_t address);
-
+void BusWrite(Bus *bus, uint16_t address, uint8_t value);
 
 #endif
