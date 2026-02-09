@@ -73,6 +73,31 @@ int CPUStep(CPU *cpu, Bus *bus) {
 
             return 8;
         }
+        case 0x66: {
+            uint16_t address = (cpu->h << 8) | cpu->l; // h- high byte, l- low byte, shift the high byte 8 places
+            uint8_t value = BusRead(bus, address);
+            cpu->h = value;
+            return 8;
+        }
+        case 0xCC: {
+            uint16_t address = BusRead(bus, cpu->pc);
+            address |= BusRead(bus, cpu->pc + 1) << 8; // cpu->pc low byte cpu->pc + 1 high byte
+            cpu->pc += 2; // a16
+
+            // Z
+            if ((cpu->f & 0x80) != 0) {
+                cpu->sp -= 2; // space for 2 bytes
+
+                BusWrite(bus, cpu->sp, cpu->pc & 0xFF);
+                BusWrite(bus, cpu->sp + 1, (cpu->pc << 8) & 0xFF);
+                cpu->pc = address;
+                return 24;
+            }
+            return 12;
+        }
+        case 0x0B: { //DEC BC   1  8   - - - -
+
+        }
         default:
             printf("Crash: opcode 0x%02X at pc 0x%04X\n", opcode, cpu->pc - 1);
             exit(1);
