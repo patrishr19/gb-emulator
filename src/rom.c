@@ -8,8 +8,8 @@ bool LoadRom(Bus *bus, char *filename) {
         return false;
     }
 
-    size_t bytesRead = fread(bus->memory, 1, 0x8000, fpointer);
-
+    size_t bytesRead = fread(bus->memory, 1, 0x8000, fpointer); // dedicated to ROM
+    
     printf("Loading %zu bytes from: %s \n", bytesRead, filename);
 
     fclose(fpointer);

@@ -2,7 +2,7 @@
 #define CPU_H
 
 #include <setup.h>
-
+#include <bus.h>
 typedef struct {
     // register pairs https://gbdev.io/pandocs/CPU_Registers_and_Flags.html
 
@@ -33,7 +33,7 @@ typedef struct {
     union {
         struct {
             uint8_t l;
-            uint8_t h;      
+            uint8_t h;
         };
         uint16_t hl;
     };
@@ -41,6 +41,12 @@ typedef struct {
     uint16_t sp;
     uint16_t pc;
 } CPU;
+
+
+void CPUInit(CPU *cpu);
+
+int CPUStep(CPU *cpu, Bus *bus);
+
 
 
 #endif
