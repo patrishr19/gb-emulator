@@ -25,8 +25,9 @@ int CPUStep(CPU *cpu, Bus *bus) {
     printf("Opcode at 0x%04X: 0x%02X\n", cpu->pc, opcode);
     cpu->pc++;
     switch(opcode) { // opcodes
-        case 0x00:
+        case 0x00: {
             return 4;
+        }
         case 0xC3: { // JP NZ, a16    3  16/12 - - - -
             uint16_t address = BusRead(bus, cpu->pc);
             address |= BusRead(bus, cpu->pc + 1) << 8;
@@ -95,8 +96,47 @@ int CPUStep(CPU *cpu, Bus *bus) {
             }
             return 12;
         }
-        case 0x0B: { //DEC BC   1  8   - - - -
+        case 0x0B: { //DEC BC   1  8   - - - - 
+            cpu->bc--;
+            return 8;
+        }
+        case 0x03: { // INC BC   1 8 -----
+            cpu->bc++;
+            return 8;
+        }
+        case 0x73: { // LD [HL], E    1  8 - - - -
+            uint16_t address = (cpu->h << 8) | cpu->l;
+            BusWrite(bus, address, cpu->e);
+            return 8;
+        }
+        case 0x83: { // ADD A, E    1  4     Z 0 H C
+            uint16_t result = cpu->a + cpu->e;
 
+            cpu->a = result & 0xFF;
+            if (cpu->a == 0) {
+                cpu->f |= 0x80;
+            } else {
+                cpu->f &= ~0x80;
+            }
+
+            cpu->f &= ~0x40;
+
+            if ((cpu->a ^ cpu->e ^ result) & 0x10) {
+                cpu->f |= 0x20;
+            } else {
+                cpu->f &= ~0x20;
+            }
+
+            if (result > 0xFF) { // 0000 0000 1111 1111 "overflow"
+                cpu->f |= 0x10;
+            } else {
+                cpu->f &= ~0x10;
+            }
+
+            return 4;
+        }
+        case 0x0C: {
+            // to do
         }
         default:
             printf("Crash: opcode 0x%02X at pc 0x%04X\n", opcode, cpu->pc - 1);
