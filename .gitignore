@@ -1,4 +1,8 @@
 *.exe
 .vscode/
 testRoms/
+<<<<<<< Updated upstream
 .VSCodeCounter/
+=======
+.VScodeCounter/
+>>>>>>> Stashed changes
