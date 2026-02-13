@@ -251,8 +251,28 @@ int CPUStep(CPU *cpu, Bus *bus) {
 
             return 8;
         }
-        case 0xDD: { // COME BACK LATER!!!!!!
+        case 0xDD: { // TODO COME BACK LATER!!!!!!
             return 4;
+        }
+        case 0xD9: { // RETI    1  16   - - - - // TODO COME BACK LATER!!!!!!
+            uint16_t address = BusRead(bus, cpu->sp);
+            address |= BusRead(bus, cpu->sp + 1) << 8;
+            cpu->sp += 2;
+
+            cpu->pc = address;
+
+            return 16;
+        }
+        case 0xFF: { // RST $38    1 16    - - - - // ! CHECK
+            cpu->sp -= 2;
+            BusWrite(bus, cpu->sp, cpu->pc & 0xFF); //
+            BusWrite(bus, cpu->sp + 1, (cpu->pc >> 8) & 0xFF);
+
+            cpu->pc = 0x38;
+            return 16;
+        }
+        case 0x39: { // ADD HL, SP   1  8    - 0 H C
+
         }
         default:
             printf("Crash: opcode 0x%02X at pc 0x%04X\n", opcode, cpu->pc - 1);
