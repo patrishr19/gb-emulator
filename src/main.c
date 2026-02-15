@@ -8,6 +8,7 @@ int main() {
 
     bool running = false;
 
+    freopen("emulator_log.txt", "w", stdout);
     // printf("CPU init done, pc register at: 0x%04X\n", cpu.pc);
 
     if (LoadRom(&gb.bus, "testRoms/tetris.gb")) {
