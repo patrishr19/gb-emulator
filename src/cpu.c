@@ -30,21 +30,18 @@ int CPUStep(CPU *cpu, Bus *bus) {
         case 0x00: {
             return 4;
         }
-        case 0xC3: { // JP NZ, a16    3  16/12 - - - -
+        case 0xC3: { // JP a16    3  16    - - - -
             uint16_t address = BusRead(bus, cpu->pc);
             address |= BusRead(bus, cpu->pc + 1) << 8;
             cpu->pc += 2;
             
-            // Z
-            if ((cpu->f & 0x80) == 0) {
-                cpu->pc = address;
-                return 16;
-            }
-            return 12;
+            cpu->pc = address;
+            return 16;
         }
         case 0xCE: { //ADC A, n8   2 8    Z 0 H C
             uint8_t value = BusRead(bus, cpu->pc);
             cpu->pc++;
+            uint8_t originA = cpu->a;
 
             uint16_t result = cpu->a + value + (cpu->f & 0x10 ? 1 : 0); // 0x10 is 4 bit and flag C carry is on bit 4
 
@@ -68,7 +65,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
             }
 
             // H
-            if ((cpu->a ^ value ^ result) & 0x10) { // overflow from carry
+            if ((((originA & 0x0F) + (value & 0x0F) + (cpu->f & 0x10 ? 1 : 0)) & 0x10) != 0) { // overflow from carry
                 cpu->f |= 0x20;
             } else {
                 cpu->f &= ~0x20;
@@ -113,7 +110,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
         }
         case 0x83: { // ADD A, E    1  4     Z 0 H C
             uint16_t result = cpu->a + cpu->e;
-
+            uint8_t originA = cpu->a;
             cpu->a = result & 0xFF;
             if (cpu->a == 0) {
                 cpu->f |= 0x80;
@@ -123,7 +120,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
 
             cpu->f &= ~0x40;
 
-            if ((cpu->a ^ cpu->e ^ result) & 0x10) {
+            if ((((originA & 0x0F) + (cpu->e & 0x0F)) & 0x10) != 0) {
                 cpu->f |= 0x20;
             } else {
                 cpu->f &= ~0x20;
@@ -140,6 +137,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
         case 0x0C: { // INC C     1  4    Z 0 H -
             //
             uint8_t result = cpu->c + 1;
+            uint8_t originC = cpu->c;
             cpu->c = result & 0xFF;
 
             if (cpu->c == 0) {
@@ -150,7 +148,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
 
             cpu->f &= ~0x40;
 
-            if ((cpu->c ^ result) &  0x10) {
+            if ((((originC & 0x0F) + 1) & 0x10) != 0) {
                 cpu->f |= 0x20;
             } else {
                 cpu->f &= ~0x20;
@@ -160,6 +158,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
         }
         case 0x0D: { // DEC C    1  4    Z 1 H -
             uint8_t result = cpu->c - 1;
+            uint8_t originC = cpu->c;
             cpu->c = result & 0xFF;
 
             if (cpu->c == 0) {
@@ -170,7 +169,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
 
             cpu->f |= 0x40;
 
-            if ((cpu->c ^ result) & 0x10) {
+            if ((((originC & 0x0F) - 1) & 0x10) != 0) {
                 cpu->f |= 0x20;
             } else {
                 cpu->f &= ~0x20;
@@ -191,7 +190,8 @@ int CPUStep(CPU *cpu, Bus *bus) {
         }
         case 0x88: { // ADC A, B    1  4     Z 0 H C
             uint16_t result = cpu->a + cpu->b + (cpu->f & 0x10 ? 1 : 0);
-
+            uint8_t originA = cpu->a;
+            uint8_t carryIn = (cpu->f & 0x10 ? 1 : 0);
             cpu->a = result & 0xFF;
 
             if (cpu->a == 0) {
@@ -202,7 +202,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
 
             cpu->f &= ~0x40;
 
-            if ((cpu->a ^ cpu->b ^ result) & 0x10) {
+            if ((((originA & 0x0F) + (cpu->b & 0x0F) + carryIn) & 0x10) != 0) {
                 cpu->f |= 0x20;
             } else {
                 cpu->f &= ~0x20;
@@ -218,7 +218,8 @@ int CPUStep(CPU *cpu, Bus *bus) {
         }
         case 0x89: { // ADC A, C    1  4    Z 0 H C
             uint16_t result = cpu->a + cpu->c + (cpu->f & 0x10 ? 1 : 0);
-
+            uint8_t originA = cpu->a;
+            uint8_t carryIn = (cpu->f & 0x10 ? 1 : 0);
             cpu->a = result & 0xFF;
 
             if (cpu->a == 0) {
@@ -229,7 +230,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
 
             cpu->f &= ~0x40;
 
-            if ((cpu->a ^ cpu->c ^ result) & 0x10) {
+            if ((((originA & 0x0F) + (cpu->c & 0x0F) + carryIn) & 0x10) != 0) {
                 cpu->f |= 0x20;
             } else {
                 cpu->f &= ~0x20;
@@ -255,6 +256,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
             return 4;
         }
         case 0xD9: { // RETI    1  16   - - - - // TODO COME BACK LATER!!!!!!
+            //* Interrupt
             uint16_t address = BusRead(bus, cpu->sp);
             address |= BusRead(bus, cpu->sp + 1) << 8;
             cpu->sp += 2;
@@ -271,8 +273,71 @@ int CPUStep(CPU *cpu, Bus *bus) {
             cpu->pc = 0x38;
             return 16;
         }
-        case 0x39: { // ADD HL, SP   1  8    - 0 H C
+        case 0xAF: { // XOR A, A     1  4     1 0 0 0
+            cpu->a = cpu->a ^ cpu->a; // 0
+            
+            cpu->f |= 0x80;
 
+            cpu->f &= ~0x40;
+            
+            cpu->f &= ~0x20;
+
+            cpu->f &= ~0x10;
+            
+            return 4;
+        }
+        case 0x21: { // LD HL, n16     3  12    - - - -
+            cpu->hl = BusRead(bus, cpu->pc);
+            cpu->hl |= BusRead(bus, cpu->pc + 1) << 8;
+            cpu->pc += 2;
+            
+            return 12;
+        }
+        case 0x06: { // LD B, n8     2  8     - - - -
+            uint8_t value = BusRead(bus, cpu->pc);
+            cpu->b = value;
+
+            cpu->pc += 1;
+            return 8;
+        }
+        case 0x32: { // LD [HL-], A    1  8    - - - -
+            uint16_t address = (cpu->h << 8) | cpu->l;
+            BusWrite(bus, address, cpu->a);
+            cpu->hl--;
+
+
+            return 8;
+        }
+        case 0x05: { // DEC B    1  4    Z 1 H -
+            uint8_t result = cpu->b - 1;
+            uint8_t originB = cpu->b;
+            cpu->b = result;
+
+            if (cpu->b == 0) {
+                cpu->f |= 0x80;
+            } else {
+                cpu->f &= ~0x80;
+            }
+
+            cpu->f |= 0x40;
+
+            if ((((originB & 0x0F) - 1) & 0x10) != 0) {
+                cpu->f |= 0x20;
+            } else {
+                cpu->f &= ~0x20;
+            }
+            
+            return 4;
+        }
+        case 0x20: { // JR NZ, e8    2  12/8    - - - -
+            int8_t offset = (int8_t)BusRead(bus, cpu->pc);
+            cpu->pc += 1;
+
+            if ((cpu->f & 0x80) == 0) {
+                cpu->pc += offset;
+                return 12;
+            }
+            return 8;
         }
         default:
             printf("Crash: opcode 0x%02X at pc 0x%04X\n", opcode, cpu->pc - 1);
