@@ -1,10 +1,13 @@
 #include <setup.h>
 #include <emulator.h>
 #include <rom.h>
+#include <iogm.h>
 int main() {
     Gameboy gb = {0};
 
     CPUInit(&gb.cpu);
+
+    IOInit(&gb.bus.io);
 
     bool running = false;
 
