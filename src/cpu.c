@@ -2,6 +2,7 @@
 #include <emulator.h>
 #include <cpu.h>
 #include <bus.h>
+#include <iogm.h>
 
 void CPUInit(CPU *cpu) { // this skips the nintendo logo and boot up sequence
     cpu->a = 0x01;
@@ -18,6 +19,8 @@ void CPUInit(CPU *cpu) { // this skips the nintendo logo and boot up sequence
 
     cpu->pc = 0x0100;
     cpu->sp = 0xFFFE;
+
+    cpu->ime = 1;
 }
 
 int CPUStep(CPU *cpu, Bus *bus) {
@@ -337,6 +340,114 @@ int CPUStep(CPU *cpu, Bus *bus) {
                 cpu->pc += offset;
                 return 12;
             }
+            return 8;
+        }
+        case 0x3E: { // LD A, n8    2  8   - - - -1
+            uint8_t value = BusRead(bus, cpu->pc);
+            cpu->a = value;
+            cpu->pc += 1;
+
+            return 8;
+        }
+        case 0xF3: { // DI   1  4   - - - -
+            // TODO COME BACK LATER!!!!!!
+            cpu->ime = 0;
+            return 4;
+        }
+        case 0xE0: { // LDH [a8], A    2  12    - - - -
+            uint8_t offset = BusRead(bus, cpu->pc);
+            cpu->pc += 1;
+            uint16_t address = 0xFF00 + offset;
+            BusWrite(bus, address, cpu->a);
+
+            printf("LDH [0x%02X], A: Wrote 0x%02X to 0x%04X\n", offset, cpu->a, address);
+
+            return 12;
+        }
+        case 0xF0: { // LDH A, [a8]  2  12  - - - -
+            uint8_t offset = BusRead(bus, cpu->pc);
+            cpu->pc += 1;
+            uint16_t address = 0xFF00 + offset;
+            cpu->a = BusRead(bus, address);
+
+            printf("LDH A, [0x%02X]: Read 0x%02X from 0x%04X\n", offset, cpu->a, address);
+
+            return 12;
+        }
+        case 0xFE: { // CP A, n8   2  8   Z 1 H C
+            uint8_t value = BusRead(bus, cpu->pc);
+            cpu->pc += 1;
+
+            uint16_t result = cpu->a - value;
+
+
+            if ((result & 0xFF) == 0) {
+                cpu->f |= 0x80;
+            } else {
+                cpu->f &= ~0x80;
+            } 
+            
+            cpu->f |= 0x40;
+
+            if ((((cpu->a & 0x0F) - (value & 0x0F)) & 0x10) != 0) {
+                cpu->f |= 0x20;
+            } else {
+                cpu->f &= ~0x20;
+            }
+
+            if (result > 0xFF) {
+                cpu->f |= 0x10;
+            } else {
+                cpu->f &= ~0x10;
+            }
+            
+            return 8;
+        }
+        case 0x36: { // LD [HL], n8  2  12  - - - -
+            uint8_t value = BusRead(bus, cpu->pc);
+            cpu->pc += 1;
+            uint16_t address = (cpu->h << 8) | cpu->l;
+            BusWrite(bus, address, value);
+            
+            return 12;
+        }
+        case 0xEA: { // LD [a16], A  3  16  - - - -
+            uint16_t address = BusRead(bus, cpu->pc);
+            address |= BusRead(bus, cpu->pc + 1) << 8;
+            cpu->pc += 2;
+
+            BusWrite(bus, address, cpu->a);
+            return 16;
+        }
+        case 0x31: { // JR NC, e8  2  12/8  - - - -
+            int8_t offset = (int8_t)BusRead(bus, cpu->pc);
+            cpu->pc += 1;
+            
+            if ((cpu->f & 0x10) == 0) {
+                cpu->pc += offset;
+                return 12;
+            }
+            return 8;
+        }
+        case 0x39: { // ADD HL, SP  1  8  - 0 H C
+            uint16_t result = cpu->hl + cpu->sp;
+            uint16_t originHL = cpu->hl;
+            cpu->hl = result & 0xFFFF;
+
+            cpu->f &= ~0x40;
+
+            if ((((originHL & 0x0FFF) + (cpu->sp & 0x0FFF)) & 0x10) != 0) {
+                cpu->f |= 0x20;
+            } else {
+                cpu->f &= ~0x20;
+            }
+
+            if (result > 0xFFFF) {
+                cpu->f |= 0x10;
+            } else {
+                cpu->f &= ~0x10;
+            }
+            
             return 8;
         }
         default:
