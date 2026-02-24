@@ -2,7 +2,7 @@
 #include <emulator.h>
 #include <rom.h>
 #include <iogm.h>
-int main() {
+int main(int argc, char *argv[]) {
     Gameboy gb = {0};
 
     CPUInit(&gb.cpu);
@@ -11,7 +11,7 @@ int main() {
 
     bool running = false;
 
-    freopen("emulator_log.txt", "w", stdout);
+    // freopen("emulator_log.txt", "w", stdout);
     // printf("CPU init done, pc register at: 0x%04X\n", cpu.pc);
 
     if (LoadRom(&gb.bus, "testRoms/pokemon.gb")) {
@@ -25,7 +25,7 @@ int main() {
     } else {
         running = false;
     }
-
+    
     while (running) {
         // getchar();
         
