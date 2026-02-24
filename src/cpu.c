@@ -98,7 +98,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
             }
             return 12;
         }
-        case 0x0B: { //DEC BC   1  8   - - - - 
+        case 0x0B: { // DEC BC   1  8   - - - - 
             cpu->bc--;
             return 8;
         }
@@ -138,7 +138,6 @@ int CPUStep(CPU *cpu, Bus *bus) {
             return 4;
         }
         case 0x0C: { // INC C     1  4    Z 0 H -
-            //
             uint8_t result = cpu->c + 1;
             uint8_t originC = cpu->c;
             cpu->c = result & 0xFF;
@@ -449,6 +448,9 @@ int CPUStep(CPU *cpu, Bus *bus) {
             }
             
             return 8;
+        }
+        case 0x28: { // JR Z, e8   2  12/8   - - - -
+            
         }
         default:
             printf("Crash: opcode 0x%02X at pc 0x%04X\n", opcode, cpu->pc - 1);

@@ -14,7 +14,7 @@ int main() {
     freopen("emulator_log.txt", "w", stdout);
     // printf("CPU init done, pc register at: 0x%04X\n", cpu.pc);
 
-    if (LoadRom(&gb.bus, "testRoms/tetris.gb")) {
+    if (LoadRom(&gb.bus, "testRoms/pokemon.gb")) {
         printf("Game: ");
         for (uint16_t i = 0x0134; i <= 0x0143; i++) { // 16 chars
             printf("%c", gb.bus.memory[i]);
