@@ -1,5 +1,7 @@
 *.exe
+emulator
 .vscode/
 testRoms/
 .VSCodeCounter/
 emulator_log.txt
+*.o
