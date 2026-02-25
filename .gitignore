@@ -5,3 +5,4 @@ testRoms/
 .VSCodeCounter/
 emulator_log.txt
 *.o
+output.txt
