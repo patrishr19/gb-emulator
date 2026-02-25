@@ -42,6 +42,7 @@ typedef struct {
     uint16_t pc;
 
     uint8_t ime;
+    uint8_t halt;
 } CPU;
 
 
@@ -49,6 +50,6 @@ void CPUInit(CPU *cpu);
 
 int CPUStep(CPU *cpu, Bus *bus);
 
-
+void HandleInterrupt(CPU *cpu, Bus *bus, uint16_t handlerAddress, uint8_t interruptBit);
 
 #endif
