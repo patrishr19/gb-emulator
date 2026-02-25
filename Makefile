@@ -1,10 +1,23 @@
 CC = gcc
-CFLAGS = -Wall -I"C:/msys64/mingw64/include" -Iinclude
-LDFLAGS = -L"C:/msys64/mingw64/lib" -lraylib -lopengl32 -lgdi32 -lwinmm
-SRC = src/main.c src/rom.c src/cpu.c src/bus.c
-OBJ = emulator.exe
-all:
-	$(CC) $(CFLAGS) $(SRC) -o $(OBJ) $(LDFLAGS)
+CFLAGS = -Wall -Iinclude -g
+LDFLAGS = -lm -lraylib -lGL -lpthread -ldl -lrt -lX11
+
+SRC = src/main.c src/rom.c src/cpu.c src/bus.c src/iogm.c
+OBJ = $(SRC:.c=.o)
+TARGET = emulator
+
+all: $(TARGET)
+
+$(TARGET): $(OBJ)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+src/%.o: src/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	del $(OBJ)
+	rm -f src/*.o $(TARGET)
+
+run: $(TARGET)
+	./$(TARGET)
+
+.PHONY: all clean run
