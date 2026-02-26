@@ -25,6 +25,11 @@ uint8_t BusRead(Bus *bus, uint16_t address) {
     
 }
 void BusWrite(Bus *bus, uint16_t address, uint8_t value) {
+    if (address == 0xFF01) {
+        printf("%c", value);
+        fflush(stdout);
+    }
+
     // ei register
     if (address == 0xFFFF) {
         IOWrite(&bus->io, 0xFF, value);
