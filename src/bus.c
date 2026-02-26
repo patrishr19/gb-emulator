@@ -49,3 +49,9 @@ void BusWrite(Bus *bus, uint16_t address, uint8_t value) {
     bus->memory[address] = value;
     
 }
+
+uint16_t BusRead16(Bus *bus, uint16_t address) {
+    uint16_t low = BusRead(bus, address);
+    uint16_t high = BusRead(bus, address + 1);
+    return (high << 8) | low;
+}

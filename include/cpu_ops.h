@@ -1,0 +1,22 @@
+#ifndef CPU_OPS_H
+#define CPU_OPS_H
+
+#include "cpu.h"
+#include "bus.h"
+
+void op_xor(CPU *cpu, uint8_t value);
+
+void op_and(CPU *cpu, uint8_t value);
+
+void op_or(CPU *cpu, uint8_t value);
+
+uint8_t op_inc_8(CPU *cpu, uint8_t value);
+uint16_t op_inc_16(CPU *cpu, uint16_t value);
+
+uint8_t op_dec_8(CPU *cpu, uint8_t value);
+uint16_t op_dec_16(CPU *cpu, uint16_t value);
+
+void op_jr(CPU *cpu, Bus *bus);
+
+void op_jp(CPU *cpu, Bus *bus);
+#endif

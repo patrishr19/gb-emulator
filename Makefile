@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Iinclude -g
 LDFLAGS = -lm -lraylib -lGL -lpthread -ldl -lrt -lX11
 
-SRC = src/main.c src/rom.c src/cpu.c src/bus.c src/iogm.c
+SRC = src/main.c src/rom.c src/cpu.c src/bus.c src/iogm.c src/cpu_ops.c
 OBJ = $(SRC:.c=.o)
 TARGET = emulator
 

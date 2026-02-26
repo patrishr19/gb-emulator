@@ -3,6 +3,12 @@
 
 #include <setup.h>
 #include <bus.h>
+
+#define FLAG_Z 0x80
+#define FLAG_N 0x40
+#define FLAG_H 0x20
+#define FLAG_C 0x10
+
 typedef struct {
     // register pairs https://gbdev.io/pandocs/CPU_Registers_and_Flags.html
 
@@ -51,5 +57,9 @@ void CPUInit(CPU *cpu);
 int CPUStep(CPU *cpu, Bus *bus);
 
 void HandleInterrupt(CPU *cpu, Bus *bus, uint16_t handlerAddress, uint8_t interruptBit);
+
+void flagSet(CPU *cpu, uint8_t flag, bool value);
+
+bool flagGet(CPU *cpu, uint8_t flag);
 
 #endif
