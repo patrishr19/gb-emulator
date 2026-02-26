@@ -71,7 +71,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
             cpu->pc = address;
             return 16;
         }
-        case 0xCE: { //ADC A, n8   2 8    Z 0 H C
+        case 0xCE: { // ADC A, n8   2 8    Z 0 H C
             uint8_t value = BusRead(bus, cpu->pc);
             cpu->pc++;
             uint8_t originA = cpu->a;
@@ -106,7 +106,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
 
             return 8;
         }
-        case 0x66: {
+        case 0x66: { // LD H, [HL]  1  8  - - - -
             uint16_t address = (cpu->h << 8) | cpu->l; // h- high byte, l- low byte, shift the high byte 8 places
             uint8_t value = BusRead(bus, address);
             cpu->h = value;
@@ -201,7 +201,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
 
             cpu->f |= 0x40;
 
-            if ((((originC & 0x0F) - 1) & 0x10) != 0) {
+            if ((originC & 0x0F) == 0) {
                 cpu->f |= 0x20;
             } else {
                 cpu->f &= ~0x20;
@@ -298,8 +298,8 @@ int CPUStep(CPU *cpu, Bus *bus) {
         }
         case 0xFF: { // RST $38    1 16    - - - - // ! CHECK
             cpu->sp -= 2;
-            BusWrite(bus, cpu->sp, cpu->pc & 0xFF); //
-            BusWrite(bus, cpu->sp + 1, (cpu->pc >> 8) & 0xFF);
+            BusWrite(bus, cpu->sp + 1, (cpu->pc >> 8) &  0xFF); //
+            BusWrite(bus, cpu->sp, cpu->pc & 0xFF);
 
             cpu->pc = 0x38;
             return 16;
@@ -318,9 +318,8 @@ int CPUStep(CPU *cpu, Bus *bus) {
             return 4;
         }
         case 0x21: { // LD HL, n16     3  12    - - - -
-            cpu->hl = BusRead(bus, cpu->pc);
-            cpu->hl |= BusRead(bus, cpu->pc + 1) << 8;
-            cpu->pc += 2;
+            cpu->l = BusRead(bus, cpu->pc++);
+            cpu->h = BusRead(bus, cpu->pc++);
             
             return 12;
         }
@@ -352,7 +351,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
 
             cpu->f |= 0x40;
 
-            if ((((originB & 0x0F) - 1) & 0x10) != 0) {
+            if ((originB & 0x0F) == 0) {
                 cpu->f |= 0x20;
             } else {
                 cpu->f &= ~0x20;
@@ -405,10 +404,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
             uint8_t value = BusRead(bus, cpu->pc);
             cpu->pc += 1;
 
-            uint16_t result = cpu->a - value;
-
-
-            if ((result & 0xFF) == 0) {
+            if (cpu->a == value) {
                 cpu->f |= 0x80;
             } else {
                 cpu->f &= ~0x80;
@@ -416,13 +412,13 @@ int CPUStep(CPU *cpu, Bus *bus) {
             
             cpu->f |= 0x40;
 
-            if ((((cpu->a & 0x0F) - (value & 0x0F)) & 0x10) != 0) {
+            if ((cpu->a & 0x0F) < (value & 0x0F)) {
                 cpu->f |= 0x20;
             } else {
                 cpu->f &= ~0x20;
             }
 
-            if (result > 0xFF) {
+            if (cpu->a < value) {
                 cpu->f |= 0x10;
             } else {
                 cpu->f &= ~0x10;
@@ -506,9 +502,8 @@ int CPUStep(CPU *cpu, Bus *bus) {
             return 24;
         }
         case 0x01: { // LD BC, n16  3  12  - - - -
-            cpu->bc = BusRead(bus, cpu->pc);
-            cpu->bc |= BusRead(bus, cpu->pc + 1) << 8;
-            cpu->pc += 2;
+            cpu->c = BusRead(bus, cpu->pc++);
+            cpu->b = BusRead(bus, cpu->pc++);
             
             return 12;
         }
@@ -631,7 +626,421 @@ int CPUStep(CPU *cpu, Bus *bus) {
             return 8;
         }
         case 0x3D: { // DEC A  1  4  Z 1 H -
+            uint8_t originA = cpu->a;
+            cpu->a -= 1;
 
+            if (cpu->a == 0) {
+                cpu->f |= 0x80;
+            } else {
+                cpu->f &= ~0x80;
+            }
+
+            cpu->f |= 0x40;
+
+            if ((originA & 0x0F) == 0) {
+                cpu->f |= 0x20;
+            } else {
+                cpu->f &= ~0x20;
+            }
+
+
+            return 4;
+        }
+        case 0x34: { // INC [HL]  1  12  Z 0 H -
+            uint16_t address = (cpu->h << 8) | cpu->l;
+            uint8_t value = BusRead(bus, address);
+
+            // H flag
+            if ((value & 0x0F) == 0x0F) {
+                cpu->f |= 0x20;
+            } else {
+                cpu->f &= ~0x20;
+            }
+
+            value++;
+
+            BusWrite(bus, address, value);
+
+            if (value == 0) {
+                cpu->f |= 0x80;
+            } else {
+                cpu->f &= ~0x80;
+            }
+            
+            cpu->f &= ~0x40;
+
+            return 12;
+        }
+        case 0x3C: { // INC A  1  4   Z 0 H -
+            if ((cpu->a & 0x0F) == 0x0F) {
+                cpu->f |= 0x20;
+            } else {
+                cpu->f &= ~0x20;
+            }
+
+            cpu->a++;
+
+            if (cpu->a == 0) {
+                cpu->f |= 0x80;
+            } else {
+                cpu->f &= ~0x80;
+            }
+
+            cpu->f &= ~0x40;
+            
+            return 4;
+        }
+        case 0xE1: { // POP HL  1  12  - - - -
+            cpu->l = BusRead(bus, cpu->sp++); // sp++ after busread
+            cpu->h = BusRead(bus, cpu->sp++);
+
+            return 12;
+        }
+        case 0xD1: { // POP DE  1  12  - - - -
+            cpu->e = BusRead(bus, cpu->sp++);
+            cpu->d = BusRead(bus, cpu->sp++);
+            
+            return 12;
+        }
+        case 0xC1: { // POP BC  1  12  - - - -
+            cpu->c = BusRead(bus, cpu->sp++);
+            cpu->b = BusRead(bus, cpu->sp++);
+            
+            return 12;
+        }
+        case 0xF1: { // POP AF  1  12  Z N H C
+            cpu->f = BusRead(bus, cpu->sp++);
+            cpu->a = BusRead(bus, cpu->sp++);
+
+            cpu->f &= 0xF0;
+
+            return 12;
+        }
+        case 0x2F: { // CPL  1  4  - 1 1 -
+            cpu->a = ~cpu->a;
+
+            cpu->f |= 0x40;
+            cpu->f |= 0x20;
+
+            return 4;
+
+        }
+        case 0x47: { // LD B, A  1 4  - - - -
+            cpu->b = cpu->a;
+            return 4;
+        }
+        case 0x11: { // LD DE, n16  3 12  - - - -
+            cpu->e = BusRead(bus, cpu->pc++);
+            cpu->d = BusRead(bus, cpu->pc++);
+            
+            return 12;
+        }
+        case 0x12: { // LD [DE], A  1 8  - - - -
+            BusWrite(bus, cpu->de, cpu->a);
+            return 8;
+        }
+        case 0x1C: { // INC E  1 4  Z 0 H -
+            if ((cpu->e & 0x0F) == 0x0F) {
+                cpu->f |= 0x20;
+            } else {
+                cpu->f &= ~0x20;
+            }
+            
+            cpu->e++;
+
+            if (cpu->e == 0) {
+                cpu->f |= 0x80;
+            } else {
+                cpu->f &= ~0x80;
+            }
+
+            cpu->f &= ~0x40;
+
+            return 4;
+
+        }
+        case 0x14: { // INC D  1 4  Z 0 H -
+            if ((cpu->d & 0x0F) == 0x0F) {
+                cpu->f |= 0x20;
+            } else {
+                cpu->f &= ~0x20;
+            }
+            
+            cpu->d++;
+
+            if (cpu->d == 0) {
+                cpu->f |= 0x80;
+            } else {
+                cpu->f &= ~0x80;
+            }
+
+            cpu->f &= ~0x40;
+
+            return 4;
+        }
+        case 0x7D: { // LD A, L  1 4  - - - -
+            cpu->a = cpu->l;
+            return 4;
+        }
+        case 0x7C: { // LD A, H  1 4  - - - -
+            cpu->a = cpu->h;
+            return 4;
+        }
+        case 0x18: { // JR e8  2 12  - - - -
+            int8_t offset = (int8_t)BusRead(bus, cpu->pc++);
+            cpu->pc += offset;
+
+            return 12;
+        }
+        case 0x23: { // INC HL  1 8  - - - -
+            cpu->hl++;
+            return 8;
+        }
+        case 0xE6: { // AND A, n8  2 8  Z 0 1 0
+            cpu->a &= BusRead(bus, cpu->pc++);
+
+            if (cpu->a == 0) {
+                cpu->f |= 0x80;
+            } else {
+                cpu->f &= ~0x80;
+            }
+
+            cpu->f &= ~0x40;
+            
+            cpu->f |= 0x20;
+
+            cpu->f &= ~0x10;
+
+            return 8;
+        }
+        case 0x10: { // STOP n8  2 4  - - - -
+            cpu->pc++;
+            // cpu->halt = 1;
+
+            return 4;
+        }
+        case 0x45: { // LD B, L  1 4  - - - -
+            cpu->b = cpu->l;
+            return 4;
+        }
+        case 0xCA: { // JP Z, a16  3 16/12  - - - -
+            uint16_t address = BusRead(bus, cpu->pc++);
+            address |= BusRead(bus, cpu->pc++) << 8;
+            if (cpu->f & 0x80) {
+                cpu->pc = address;
+                return 16;
+            }
+            return 12;
+        }
+        case 0xC4: { // CALL NZ, a16  3 24/12  - - - -
+            uint16_t dest = BusRead(bus, cpu->pc++);
+            dest |= (BusRead(bus, cpu->pc++) << 8);
+
+            if (!(cpu->f & 0x80)) {
+                cpu->sp -= 2;
+                BusWrite(bus, cpu->sp, cpu->pc & 0xFF);
+                BusWrite(bus, cpu->sp + 1, (cpu->pc >> 8) & 0xFF);
+
+                cpu->pc = dest;
+                return 24;
+            }
+            return 12;
+        }
+        case 0x77: { // LD [HL], A  1 8  - - - -
+            uint16_t address = (cpu->h << 8) | cpu->l;
+            BusWrite(bus, address, cpu->a);
+            return 8;
+        }
+        case 0x2C: { // INC L  1 4  Z 0 H -
+            if ((cpu->l & 0x0F) == 0x0F) {
+                cpu->f |= 0x20;
+            } else {
+                cpu->f &= ~0x20;
+            }
+
+            cpu->l++;
+
+            if (cpu->l == 0) {
+                cpu->f |= 0x80;
+            } else {
+                cpu->f &= ~0x80;
+            }
+
+            cpu->f &= ~0x40;
+
+            return 4;
+        }
+        case 0x24: { // INC H  1 4  Z 0 H -
+            if ((cpu->h & 0x0F) == 0x0F) {
+                cpu->f |= 0x20;
+            } else {
+                cpu->f &= ~0x20;
+            }
+
+            cpu->h++;
+
+            if (cpu->h == 0) {
+                cpu->f |= 0x80;
+            } else {
+                cpu->f &= ~0x80;
+            }
+
+            cpu->f &= ~0x40;
+
+            return 4;
+        }
+        case 0x1A: { // LD A, [DE]  1 8  - - - -
+            cpu->a = BusRead(bus, cpu->de);
+            return 8;
+        }
+        case 0x13: { // INC DE  1 8  - - - -
+            cpu->de++;
+            return 8;
+        }
+        case 0xA9: { // XOR A, C  1 4  Z 0 0 0
+            cpu->a = cpu->a ^ cpu->c;
+            
+            if (cpu->a == 0) {
+                cpu->f |= 0x80;
+            } else {
+                cpu->f &= ~0x80;
+            }
+
+            cpu->f &= ~0x40;
+            
+            cpu->f &= ~0x20;
+
+            cpu->f &= ~0x10;
+
+            return 4;
+        }
+        case 0x22: { // LD [HL+], A  1 8  - - - -
+            BusWrite(bus, cpu->hl, cpu->a);
+            cpu->hl++;
+            return 8;
+        }
+        case 0xC6: { // ADD A, n8  2 8  Z 0 H C
+            uint8_t n8 = BusRead(bus, cpu->pc++);
+            uint16_t result =  cpu->a + n8;
+
+            if ((cpu->a & 0x0F) + (n8 & 0x0F) > 0x0F) {
+                cpu->f |= 0x20;
+            } else {
+                cpu->f &= ~0x20;
+            }
+
+            if (result > 0xFF) {
+                cpu->f |= 0x10;
+            } else {
+                cpu->f &= ~0x10;
+            }
+
+            cpu->a = (uint8_t)result;
+
+            if (cpu->a == 0) {
+                cpu->f |= 0x80;
+            } else {
+                cpu->f &= ~0x80;
+            }
+
+            cpu->f &= ~0x40;
+
+            return 8;
+        }
+        case 0xD6: { // SUB A, n8  2 8  Z 1 H C
+            uint8_t n8 = BusRead(bus, cpu->pc++);
+
+            if ((n8 & 0x0F) > (cpu->a & 0x0F)) {
+                cpu->f |= 0x20;
+            }  else {
+                cpu->f &= ~0x20;
+            }
+
+            if (n8 > cpu->a) {
+                cpu->f |= 0x10;
+            } else {
+                cpu->f &= ~0x10;
+            }
+
+            cpu->a -= n8;
+
+            if (cpu->a == 0) {
+                cpu->f |= 0x80;
+            } else {
+                cpu->f &= ~0x80;
+            }
+
+            cpu->f |= 0x40;
+
+            return 8;
+        }
+        case 0xB7: { // OR A, A  1 4  Z 0 0 0
+            cpu->a |= cpu->a;
+
+            if (cpu->a == 0) {
+                cpu->f |= 0x80;
+            } else {
+                cpu->f &= ~0x80;
+            }
+
+            cpu->f &= ~0x40;
+            cpu->f &= ~0x20;
+            cpu->f &= ~0x10;
+
+            return 4; 
+        }
+        case 0x46: { // LD B, [HL]  1  8  - - - -
+            cpu->b = BusRead(bus, cpu->hl);
+            return 8;
+        }
+        case 0x2D: { // DEC L  1 4  Z 1 H -
+            if ((cpu->l & 0x0F) == 0) {
+                cpu->f |= 0x20;
+            } else {
+                cpu->f &= ~0x20;
+            }
+
+            cpu->l--;
+
+            if (cpu->l == 0) {
+                cpu->f |= 0x80;
+            } else {
+                cpu->f &= ~0x80;
+            }
+
+            cpu->f |= 0x40;
+
+            return 4;
+        }
+        case 0x4E: { // LD C, [HL]  1 8  - - - -
+            cpu->c = BusRead(bus, cpu->hl);
+            return 8;
+        }
+        case 0x56: { // LD D, [HL]  1 8  - - - -
+            cpu->d = BusRead(bus, cpu->hl);
+            return 8;
+        }
+        case 0xAE: { // XOR A, [HL]  1 8  Z 0 0 0
+            cpu->a = cpu->a ^ BusRead(bus, cpu->hl);
+            
+            if (cpu->a == 0) {
+                cpu->f |= 0x80;
+            } else {
+                cpu->f &= ~0x80;
+            }
+
+            cpu->f &= ~ 0x40;
+            cpu->f &= ~ 0x20;
+            cpu->f &= ~ 0x10;
+
+            return 8;
+        }
+        case 0x26: { // LD H, n8  2 8  - - - -
+            cpu->h = BusRead(bus, cpu->pc++);
+            return 8;
+        }
+        case 0xCB: { //! PREFIX
+            
         }
         default: {
             printf("Crash: opcode 0x%02X at pc 0x%04X\n", opcode, cpu->pc - 1);
