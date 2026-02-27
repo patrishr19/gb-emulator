@@ -16,19 +16,20 @@ int main(int argc, char *argv[]) {
 
     bool running = false;
 
-    // freopen("emulator_log.txt", "w", stdout);
-    // printf("CPU init done, pc register at: 0x%04X\n", cpu.pc);
+    if (argc < 2) {
+        return 1;
+    }
 
-    if (LoadRom(&gb.bus, "testRoms/cpu_instrs/individual/09-op r,r.gb")) {
+    if (LoadRom(&gb.bus, argv[1])) {
+        printf("Loaded: %s\n", argv[1]);
         printf("Game: ");
         for (uint16_t i = 0x0134; i <= 0x0143; i++) { // 16 chars
             printf("%c", gb.bus.memory[i]);
         }
         printf("\n");
-
-
         running = true;
     } else {
+        printf("Failed to load: %s\n", argv[1]);
         running = false;
     }
     
