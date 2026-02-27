@@ -3,7 +3,7 @@
 Emulator of the GameBoy console, that simulates it's hardware and is able to run ROM files with the `.gb` file extension. Program is developed primarily in C. I picked up this project due to the fact that i wanted to learn about low level stuff, how different components work and mainly enhance my C knowledge.
 
 ## Documentation
-I'm currently taking inspire from the [pandocs](https://gbdev.io/pandocs/About.html).
+I'm currently using the [pandocs](https://gbdev.io/pandocs/About.html) as my source.
 
 ## Goal
 The final product should be a executable file for Linux and Windows and maybe some linked libraries.
