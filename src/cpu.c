@@ -5,7 +5,7 @@
 #include <iogm.h>
 #include <cpu_ops.h>
 
-void CPUInit(CPU *cpu) { // this skips the nintendo logo and boot up sequence
+void CPUInit(CPU *cpu) { // nintendo logo skip
     cpu->a = 0x01;
     cpu->f = 0xB0;
 
