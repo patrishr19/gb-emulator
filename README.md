@@ -39,20 +39,29 @@ make
 #####  Requirements
 - C compiler (like gcc)
 - Make
+- Raylib
 
 ##### Linux (Debian)
 ```bash
 sudo apt update && sudo apt install build-essential gcc make
+
+sudo add-apt-repository ppa:texus/raylib
+sudo apt update
+sudo apt install libraylib5-dev
 ```
 
 ##### Linux (Fedora)
 ```bash
 sudo dnf groupinstall "Development Tools"
+
+sudo dnf install raylib-devel
 ```
 
 ##### Linux (Arch)
 ```bash
 sudo pacman -S base-devel
+
+sudo pacman -S raylib
 ```
 
 ##### Windows 11 (not tested)
