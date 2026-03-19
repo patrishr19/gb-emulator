@@ -6,3 +6,4 @@ testRoms/
 emulator_log.txt
 *.o
 output.txt
+*.gb
