@@ -650,7 +650,8 @@ int CPUStep(CPU *cpu, Bus *bus) {
             flagSet(cpu, FLAG_C, !flagGet(cpu, FLAG_C));
             return 4;          
         case 0xCB: { //! PREFIX
-            
+            uint8_t cb = BusRead(bus, cpu->pc++);
+            return execute_cb(cpu, bus, cb);
         }
         default: {
             printf("Crash: opcode 0x%02X at pc 0x%04X\n", opcode, cpu->pc - 1);
