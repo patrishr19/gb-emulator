@@ -4,6 +4,7 @@
 #include <bus.h>
 #include <iogm.h>
 #include <cpu_ops.h>
+#include <cpu_prefix.h>
 
 void CPUInit(CPU *cpu) { // nintendo logo skip
     cpu->a = 0x01;
@@ -301,7 +302,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
 
         // LD Absolute
         case 0xEA: {
-            uint16_t address = BusRead16(bus, cpu->pc++);
+            uint16_t address = BusRead16(bus, cpu->pc);
             cpu->pc += 2;
             BusWrite(bus, address, cpu->a);
             return 16; }
@@ -650,8 +651,89 @@ int CPUStep(CPU *cpu, Bus *bus) {
             flagSet(cpu, FLAG_C, !flagGet(cpu, FLAG_C));
             return 4;          
         case 0xCB: { //! PREFIX
-            uint8_t cb = BusRead(bus, cpu->pc++);
-            return execute_cb(cpu, bus, cb);
+            uint8_t cb = BusRead(bus, cpu->pc++); // 0110 0101  0000 0001 & 0000 0011
+
+            uint8_t category = (cb >> 6) & 0x03;
+            uint8_t bit  = (cb >> 3) & 0x07;
+            uint8_t reg = (cb & 0x07);
+
+            uint8_t value = get_cb_value(cpu, bus, reg);
+
+            if (category == 1) { // bit
+                if (!(value & (1 << bit))) {
+                    flagSet(cpu, FLAG_Z, 1);
+                } else {
+                    flagSet(cpu, FLAG_Z, 0);
+                }
+
+                flagSet(cpu, FLAG_N, 0);
+                flagSet(cpu, FLAG_H, 1);
+
+                return (reg == 6) ? 12 : 8;
+            }
+            else if (category == 2) { // res
+                value &= ~(1 << bit);
+            }
+            else if (category == 3) { // set
+                value |= (1 << bit);
+            }
+            else { // shift/rotate
+                uint8_t result = value;
+                uint8_t old_carry = (cpu->f & FLAG_C) ? 1 : 0;
+                uint8_t new_carry = 0;
+
+                switch (bit) {
+                    case 0: {
+                        new_carry = (value >> 7) & 1;
+                        result = (value << 1) | new_carry;
+                        break;
+                    }
+                    case 1: {
+                        new_carry = value & 1;
+                        result = (value >> 1) | (new_carry << 7);
+                        break;
+                    }
+                    case 2: {
+                        new_carry = (value >> 7) & 1;
+                        result = (value << 1) | old_carry;
+                        break;
+                    }
+                    case 3: {
+                        new_carry = value & 1;
+                        result = (value >> 1) | (old_carry << 7);
+                        break;
+                    }
+                    case 4: {
+                        new_carry = (value >> 7) & 1;
+                        result = value << 1;
+                        break;
+                    }
+                    case 5: {
+                        new_carry = value & 1;
+                        result = (value >> 1) | (value & 0x80);
+                        break;
+                    }
+                    case 6: {
+                        result = ((value & 0x0F) << 4) | ((value & 0xF0) >> 4);
+                        new_carry = 0;
+                        break;
+                    }
+                    case 7: {
+                        new_carry = value & 1;
+                        result = value >> 1;
+                        break;
+                    }
+                }
+                flagSet(cpu, FLAG_Z, (result == 0));
+                flagSet(cpu, FLAG_N, 0);
+                flagSet(cpu, FLAG_H, 0);
+                flagSet(cpu, FLAG_C, new_carry);
+
+                value = result;
+            }
+
+            set_cb_value(cpu, bus, reg, value);
+            return (reg == 6) ? 16 : 8;
         }
         default: {
             printf("Crash: opcode 0x%02X at pc 0x%04X\n", opcode, cpu->pc - 1);
