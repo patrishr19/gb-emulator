@@ -4,7 +4,7 @@
 #include <iogm.h>
 int main(int argc, char *argv[]) {
     int stepCount = 0;
-    const int MAX_STEPS = 10000000;
+    // const int MAX_STEPS = 10000000;
 
     int cycleCount = 0;
     const int CYCLES_PER_FRAME = 70224; //https://gbdev.io/pandocs/Rendering.html?highlight=70224#ppu-modes
@@ -33,8 +33,10 @@ int main(int argc, char *argv[]) {
         running = false;
     }
     
-    while (running && stepCount < MAX_STEPS) {
+    while (running) { // && stepCount < MAX_STEPS
         int cycles = CPUStep(&gb.cpu, &gb.bus);
+
+        TimerStep(&gb.bus, cycles);
         cycleCount += cycles;
         stepCount++;
         
@@ -52,7 +54,7 @@ int main(int argc, char *argv[]) {
         }
         
 
-        printf("next pc: 0x%04X | sp: 0x%04X, cycles: %d\n", gb.cpu.pc, gb.cpu.sp, cycles);
+        // printf("next pc: 0x%04X | sp: 0x%04X, cycles: %d\n", gb.cpu.pc, gb.cpu.sp, cycles);
     }
 
     return 0;

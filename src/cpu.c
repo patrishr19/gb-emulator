@@ -57,7 +57,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
         return 4;
     }
     uint8_t opcode = BusRead(bus, cpu->pc);
-    printf("Opcode at 0x%04X: 0x%02X\n", cpu->pc, opcode);
+    // printf("Opcode at 0x%04X: 0x%02X\n", cpu->pc, opcode);
 
     
     cpu->pc++;
@@ -747,11 +747,13 @@ int CPUStep(CPU *cpu, Bus *bus) {
 
 void HandleInterrupt(CPU *cpu, Bus *bus, uint16_t handlerAddress, uint8_t interruptBit) {
     cpu->ime = 0;
+    cpu->halt = 0;
 
-    cpu->sp -= 2;
+    cpu->sp--;
+    BusWrite(bus, cpu->sp, (cpu->pc >> 8) & 0xFF);
+    cpu->sp--;
     BusWrite(bus, cpu->sp, cpu->pc & 0xFF);
-    BusWrite(bus, cpu->sp + 1, (cpu->pc >> 8) & 0xFF);
-
+    
     cpu->pc = handlerAddress;
 
     uint8_t ifFlags = BusRead(bus, 0xFF0F);
