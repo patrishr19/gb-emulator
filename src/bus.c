@@ -8,6 +8,15 @@ uint8_t BusRead(Bus *bus, uint16_t address) {
         return (bus->internal_divider >> 8);
     }
     
+    if (address < 0x4000) {
+        return bus->memory[address];
+    }
+    if (address >= 0x4000 && address < 0x8000) {
+        uint8_t ef_bank = bus->current_bank | (bus->bank_upper << 5);
+        uint32_t offset = (address - 0x4000) + ((uint32_t)ef_bank * 0x4000);
+        return bus->memory[offset];
+    }
+
     if (address >= 0xE000 && address <= 0xFDFF) {
         address -= 0x2000;
     }
@@ -23,24 +32,46 @@ uint8_t BusRead(Bus *bus, uint16_t address) {
     return bus->memory[address]; //for now
     
 }
+
 void BusWrite(Bus *bus, uint16_t address, uint8_t value) {
     if (address == 0xFF04) {
         bus->internal_divider = 0;
         bus->io.registers[0x04] = 0;
         return;
     }
-    if (address == 0xFF01) {
-        printf("%c", value);
-        fflush(stdout);
-    }
 
+    if (address >= 0x2000 && address < 0x4000) {
+        uint8_t bank = value & 0x1F;
+        if (bank == 0) bank = 1;
+        bus->current_bank = bank;
+        // printf("Bank: %d\n", bank);
+        return;
+    }
+    if (address >= 0x4000 && address < 0x6000) {
+        bus->bank_upper = value & 0x03;
+        return;
+    }
+    if (address >= 0x6000 && address < 0x8000) {
+        bus->banking_mode = value & 0x01;
+        return;
+    }
     if (address < 0x8000) {
-        //TODO MBC
         return;
     }
 
     if (address >= 0xE000 && address <= 0xFDFF) {
         address -= 0x2000;
+    }
+
+    if (address == 0xFF02 && value == 0x81) {
+        printf("%c", bus->io.registers[0x01]);
+        fflush(stdout);
+
+
+        IOWrite(&bus->io, 0x02, value & 0x7F);
+        bus->io.registers[0x0F] |= 0x08;
+        bus->io.registers[0xFF] |= 0x08; 
+        return; 
     }
 
     // io registers
@@ -65,6 +96,7 @@ uint16_t BusRead16(Bus *bus, uint16_t address) {
 }
 
 void TimerStep(Bus *bus, int cycles) {
+
     uint8_t tac = bus->io.registers[0x07];
     int bit = 0;
     switch (tac & 0x03) {

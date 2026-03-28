@@ -8,7 +8,13 @@ bool LoadRom(Bus *bus, char *filename) {
         return false;
     }
 
-    size_t bytesRead = fread(bus->memory, 1, 0x8000, fpointer); // dedicated to ROM
+    // https://stackoverflow.com/questions/238603/how-can-i-get-a-files-size-in-c
+    fseek(fpointer, 0, SEEK_END);
+    long fsize = ftell(fpointer);
+    fseek(fpointer, 0, SEEK_SET);
+
+
+    size_t bytesRead = fread(bus->memory, 1, fsize, fpointer); // dedicated to ROM
     
     printf("Loading %zu bytes from: %s \n", bytesRead, filename);
 

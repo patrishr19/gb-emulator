@@ -24,9 +24,14 @@ void CPUInit(CPU *cpu) { // nintendo logo skip
 
     cpu->ime = 1;
     cpu->halt = 0;
+    cpu->ime_scheduled = 0;
 }
 
 int CPUStep(CPU *cpu, Bus *bus) {
+    // static uint64_t step = 0;
+    // step++;
+
+
     uint8_t ifFlags = BusRead(bus, 0xFF0F);
     uint8_t ieFlags = BusRead(bus, 0xFFFF);
     uint8_t interrupts = ifFlags & ieFlags;
@@ -35,7 +40,13 @@ int CPUStep(CPU *cpu, Bus *bus) {
         cpu->halt = 0;
     }
 
+
+    if (cpu->halt) {
+        return 4;
+    }
+    
     if (cpu->ime && interrupts) {
+        cpu->ime_scheduled = 0;
         if (interrupts & 0x01) {
             HandleInterrupt(cpu, bus, 0x40, 0x01);
             return 20;
@@ -53,13 +64,14 @@ int CPUStep(CPU *cpu, Bus *bus) {
             return 20;
         }
     }
-    if (cpu->halt) {
-        return 4;
+    // interrupts check
+    if (cpu->ime_scheduled) {
+        cpu->ime = 1;
+        cpu->ime_scheduled = 0;
     }
+    
     uint8_t opcode = BusRead(bus, cpu->pc);
     // printf("Opcode at 0x%04X: 0x%02X\n", cpu->pc, opcode);
-
-    
     cpu->pc++;
     switch(opcode) { // opcodes
         // NOP
@@ -548,7 +560,7 @@ int CPUStep(CPU *cpu, Bus *bus) {
             }
 
         // RETI
-        case 0xD9: op_ret(cpu, bus); cpu->ime = 1; return 16;
+        case 0xD9: op_ret(cpu, bus); cpu->ime_scheduled = 1; return 16;
         
         // RST
         case 0xC7: op_rst(cpu, bus, 0x0000); return 16;
@@ -561,9 +573,11 @@ int CPUStep(CPU *cpu, Bus *bus) {
         case 0xFF: op_rst(cpu, bus, 0x0038); return 16;
         
         // SYSTEM
-        case 0xF3: cpu->ime = 0; return 4;
-        case 0xFB: cpu->ime = 1; return 4; // TODO Scheduling
-        case 0x10: cpu->pc++; cpu->halt = 1; return 4;
+        case 0xF3: cpu->ime = 0;cpu->ime_scheduled = 0; return 4;
+        case 0xFB: {
+            cpu->ime_scheduled = 1; return 4;
+        }
+        case 0x10: cpu->pc++; return 4;
 
         // ROTATION
         case 0x0F: { // RRCA
@@ -741,7 +755,6 @@ int CPUStep(CPU *cpu, Bus *bus) {
         }
     }
 
-    // interrupts check
     return 0;
 }
 
