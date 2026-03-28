@@ -93,14 +93,16 @@ uint8_t op_add(CPU *cpu, uint8_t a, uint8_t b, bool useCarry) {
 }
 
 uint8_t op_sub(CPU *cpu, uint8_t a, uint8_t b, bool useCarry) {
-    uint8_t cIn = useCarry && flagGet(cpu, FLAG_C) ? 1 : 0;
+    uint8_t cIn = (useCarry && flagGet(cpu, FLAG_C)) ? 1 : 0;
 
-    flagSet(cpu, FLAG_Z, (a - b - cIn) == 0);
+    uint8_t result = a - b - cIn;
+
+    flagSet(cpu, FLAG_Z, result == 0);
     flagSet(cpu, FLAG_N, 1);
     flagSet(cpu, FLAG_H, (a & 0x0F) < (b & 0x0F) + cIn);
-    flagSet(cpu, FLAG_C, a < (uint16_t)b + cIn);
+    flagSet(cpu, FLAG_C, (int)a - (int)b - cIn < 0);
 
-    return a - b - cIn;
+    return result;
 }
 
 void op_add_hl(CPU *cpu, uint16_t value) {
