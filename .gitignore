@@ -7,3 +7,4 @@ emulator_log.txt
 *.o
 output.txt
 *.gb
+gb-test-roms-master/
