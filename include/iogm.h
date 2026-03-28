@@ -3,9 +3,10 @@
 
 #include <setup.h>
 
+
 typedef struct {
     uint8_t registers[256];
-}IORegisters;
+} IORegisters;
 
 
 void IOInit(IORegisters *io);

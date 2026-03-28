@@ -1,7 +1,7 @@
 #include <iogm.h>
 #include <setup.h>
 #include <bus.h>
-
+#include <emulator.h>
 void IOInit(IORegisters *io) {
     for (int i = 0;i < 256; i++) {
         io->registers[i] = 0;
@@ -14,13 +14,13 @@ void IOInit(IORegisters *io) {
 
 uint8_t IORead(IORegisters *io, uint8_t offset) {
     if (offset == 0x0F) {
-        return io->registers[offset] & 0x1F;
+        return io->registers[offset] | 0xE0;
     }
     
     return io->registers[offset];
 }
 
-void IOWrite(IORegisters *io, uint8_t offset, uint8_t value) {
+void IOWrite(IORegisters *io, uint8_t offset, uint8_t value) {    
     if (offset == 0x0F) {
         printf(">>> IOWrite IF: offset=0x%02X, value=0x%02X\n", offset, value);
         io->registers[offset] = value & 0x1F;
