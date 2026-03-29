@@ -2,6 +2,7 @@
 #include <emulator.h>
 #include <bus.h>
 #include <iogm.h>
+#include <ppu.h>
 
 uint8_t BusRead(Bus *bus, uint16_t address) {
     if (address == 0xFF04) {
@@ -27,6 +28,16 @@ uint8_t BusRead(Bus *bus, uint16_t address) {
 
     if (address == 0xFFFF) {
         return IORead(&bus->io, 0xFF);
+    }
+
+    if (address < 0xA000) {
+        //char map data
+        return ppu_vram_read(address);
+    }
+
+    if (address < 0xFEA0) {
+        // oam
+        return ppu_oam_read(address);
     }
 
     return bus->memory[address]; //for now
@@ -58,7 +69,13 @@ void BusWrite(Bus *bus, uint16_t address, uint8_t value) {
     if (address < 0x8000) {
         return;
     }
-
+    if (address < 0xA000) {
+        //vram
+        ppu_vram_write(address, value);
+    }
+    if (address < 0xFEA0) {
+        ppu_oam_write(address, value);
+    }
     if (address >= 0xE000 && address <= 0xFDFF) {
         address -= 0x2000;
     }
