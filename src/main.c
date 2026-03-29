@@ -2,6 +2,7 @@
 #include <emulator.h>
 #include <rom.h>
 #include <iogm.h>
+#include <dma.h>
 int main(int argc, char *argv[]) {
     int stepCount = 0;
     // const int MAX_STEPS = 10000000;
@@ -37,7 +38,11 @@ int main(int argc, char *argv[]) {
     while (running) { // && stepCount < MAX_STEPS
         int cycles = CPUStep(&gb.cpu, &gb.bus);
 
-        TimerStep(&gb.bus, cycles);
+        for (int i = 0; i < cycles; i += 4) {
+            dma_tick(&gb.bus);
+            TimerStep(&gb.bus, 4);
+        }
+        // TimerStep(&gb.bus, cycles);
         cycleCount += cycles;
         stepCount++;
         
