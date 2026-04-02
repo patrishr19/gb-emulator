@@ -36,7 +36,7 @@ void dma_tick(Bus *bus) {
     ctx.active = ctx.byte < 0xA0;
 
     if (!ctx.active) {
-        printf("DMA DONE\n");
+        // printf("DMA DONE\n");
         // sleep(2);
     }
 }
