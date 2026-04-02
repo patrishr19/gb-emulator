@@ -3,8 +3,7 @@
 #include <bus.h>
 #include <emulator.h>
 #include <dma.h>
-
-uint8_t ly = 0;
+#include <lcd.h>
 
 void IOInit(IORegisters *io) {
     for (int i = 0;i < 256; i++) {
@@ -19,8 +18,8 @@ void IOInit(IORegisters *io) {
 uint8_t IORead(IORegisters *io, uint8_t offset) {
     if (offset == 0x0F) {
         return io->registers[offset] | 0xE0;
-    } else if (offset == 0x44) {
-        return ly++;
+    } else if (offset > 0x40 && offset < 0x4B) {
+        return lcd_read(0xFF00 + offset);
     }
     
     return io->registers[offset];
@@ -33,9 +32,8 @@ void IOWrite(IORegisters *io, uint8_t offset, uint8_t value) {
         // printf(">>> After write, IF=0x%02X\n", io->registers[offset]);
     } else if (offset == 0xFF) {
         io->registers[offset] = value & 0x1F;
-    } else if (offset == 0x46) {
-        dma_start(value);
-        io->registers[offset] = value;
+    } else if (offset > 0xFF40 && offset < 0xFF4B) {
+        lcd_write(0xFF00 + offset, value);
     } else {
         io->registers[offset] = value;
     }
