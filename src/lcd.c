@@ -67,7 +67,7 @@ void lcd_write(uint16_t address, uint8_t value) {
     } else if (address == 0xFF48) {
         update_palette(value & 0b11111100, 1);
     } else if (address == 0xFF49) {
-        update_palette(value * 0b11111100, 2);
+        update_palette(value & 0b11111100, 2);
     }
 
 }

@@ -15,7 +15,7 @@ endif
 
 CC = gcc
 CFLAGS = -Wall -Iinclude -g
-SRC = src/main.c src/rom.c src/cpu.c src/bus.c src/iogm.c src/cpu_ops.c src/cpu_prefix.c src/ppu.c src/dma.c src/lcd.c
+SRC = src/main.c src/rom.c src/cpu.c src/bus.c src/iogm.c src/cpu_ops.c src/cpu_prefix.c src/ppu.c src/dma.c src/lcd.c src/ppu_sm.c
 OBJ = $(SRC:.c=.o)
 
 all: $(TARGET)

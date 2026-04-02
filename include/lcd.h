@@ -42,7 +42,7 @@ lcd_context *lcd_get_context();
 #define LCDC_LCD_ENABLE (BIT(lcd_get_context()->lcdc, 7))
 
 #define LCDS_MODE ((lcd_mode)(lcd_get_context()->lcds & 0b11))
-#define LCDS_MODE_SET(mode) {lcd_get_context()->lcds &= ~0b11; lcd_get_context()->lcds |= mode}
+#define LCDS_MODE_SET(mode) {lcd_get_context()->lcds &= ~0b11; lcd_get_context()->lcds |= mode;}
 
 #define LCDS_LYC (BIT(lcd_get_context()->lcds, 2))
 #define LCDS_LYC_SET(b) (BIT_SET(lcd_get_context()->lcds, 2, b))

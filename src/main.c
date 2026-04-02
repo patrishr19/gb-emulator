@@ -3,17 +3,13 @@
 #include <rom.h>
 #include <iogm.h>
 #include <dma.h>
+#include <ppu.h>
 int main(int argc, char *argv[]) {
-    int stepCount = 0;
-    // const int MAX_STEPS = 10000000;
-
-    int cycleCount = 0;
-    const int CYCLES_PER_FRAME = 70224; //https://gbdev.io/pandocs/Rendering.html?highlight=70224#ppu-modes
     Gameboy gb = {0};
     gb.bus.current_bank = 1;
     gb.bus.internal_divider = 0;
     CPUInit(&gb.cpu);
-
+    ppu_init();
     IOInit(&gb.bus.io);
 
     bool running = false;
@@ -35,30 +31,14 @@ int main(int argc, char *argv[]) {
         running = false;
     }
     
-    while (running) { // && stepCount < MAX_STEPS
+    while (running) {
         int cycles = CPUStep(&gb.cpu, &gb.bus);
 
         for (int i = 0; i < cycles; i += 4) {
             dma_tick(&gb.bus);
             TimerStep(&gb.bus, 4);
+            ppu_tick(&gb.bus);
         }
-        // TimerStep(&gb.bus, cycles);
-        cycleCount += cycles;
-        stepCount++;
-        
-        if (cycleCount >= CYCLES_PER_FRAME) {
-            cycleCount -= CYCLES_PER_FRAME;
-            
-
-            //v-blank interrupt flag
-            uint8_t ifFlags = BusRead(&gb.bus, 0xFF0F);
-            // uint8_t ieFlags = BusRead(&gb.bus, 0xFFFF);
-
-            BusWrite(&gb.bus, 0xFF0F, ifFlags | 0x01);
-        }
-        
-
-        // printf("next pc: 0x%04X | sp: 0x%04X, cycles: %d\n", gb.cpu.pc, gb.cpu.sp, cycles);
     }
 
     return 0;
