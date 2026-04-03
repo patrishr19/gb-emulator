@@ -8,5 +8,5 @@
 #include <string.h>
 
 #define BIT_SET(var, bit, val) ((val) ? ((var) |= (1 << (bit))) : ((var) &= ~(1 << (bit))))
-
+#define BIT(a, n) ((a & (1 << n)) ? 1 : 0)
 #endif

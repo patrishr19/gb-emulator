@@ -77,7 +77,6 @@ int main(int argc, char *argv[]) {
         ClearBackground(BLACK);
         DrawTextureEx(screen_texture, (Vector2){0, 0}, 0.0f, (float)scale, WHITE);
         DrawFPS(10, 10);
-
         EndDrawing();
 
         print_cpu_status(&gb);
