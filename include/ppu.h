@@ -58,9 +58,21 @@ typedef struct {
 
 } oam_entry;
 
+typedef struct _oam_line_entry {
+    oam_entry entry;
+    struct _oam_line_entry *next;
+} oam_line_entry;
+
 typedef struct {
     oam_entry oam_ram[40];
     uint8_t vram[0x2000];
+
+    uint8_t line_sprite_count; //0-10
+    oam_line_entry *line_sprites; //linked list of current sprites on line
+    oam_line_entry line_entry_array[10]; // mem to use for list
+
+    uint8_t fetched_entry_count;
+    oam_entry fetched_entries[3];
 
     pixel_fifo_context pfc;
 
