@@ -4,6 +4,7 @@
 #include <cpu.h>
 #include <setup.h>
 #include <iogm.h>
+#include <stdint.h>
 
 void increment_ly(Bus *bus) {
     lcd_get_context()->ly++;
@@ -19,6 +20,64 @@ void increment_ly(Bus *bus) {
     }
 }
 
+void load_lines_sprites() {
+    int current_y = lcd_get_context()->ly;
+
+    uint8_t sprite_height = LCDC_OBJ_HEIGHT;
+    memset(ppu_get_context()->line_entry_array, 0, sizeof(ppu_get_context()->line_entry_array));
+
+    for (int i=0; i<40; i++) {
+	oam_entry o = ppu_get_context()->oam_ram[i];
+
+	if (!o.x) {
+	    //x = 0 not visible
+	    continue;
+	}
+
+	if (ppu_get_context()->line_sprite_count >= 10) {
+	    break;
+	}
+
+	if (o.y <= current_y + 16 && o.y + sprite_height > current_y + 16) {
+	    //sprite on current line_
+
+	    oam_line_entry *entry = &ppu_get_context()->line_entry_array[
+		ppu_get_context()->line_sprite_count++
+	    ];
+
+	    entry->entry = o;
+	    entry->next = NULL;
+
+	    if (!ppu_get_context()->line_sprites || ppu_get_context()->line_sprites->entry.x > o.x ) {
+		entry->next = ppu_get_context()->line_sprites;
+		ppu_get_context()->line_sprites = entry;
+		continue;
+	    }
+
+	    //sort
+
+	    oam_line_entry *le = ppu_get_context()->line_sprites;
+	    oam_line_entry *prev = le;
+
+	    while(le) {
+		if (le->entry.x > o.x) {
+		    prev->next = entry;
+		    entry->next = le;
+		    break;
+		}
+
+		if (!le->next) {
+		    le->next = entry;
+		    break;
+		}
+
+		prev = le;
+		le = le->next;
+	    }
+	}
+    }
+}
+
 void ppu_mode_oam() {
     // printf("OAM ticks=%d\n", ppu_get_context()->line_ticks);
 
@@ -30,6 +89,14 @@ void ppu_mode_oam() {
         ppu_get_context()->pfc.fetch_x = 0;
         ppu_get_context()->pfc.pushed_x = 0;
         ppu_get_context()->pfc.fifo_x = 0;
+    }
+
+    if (ppu_get_context()->line_ticks == 1) {
+	// read oam on the first tick
+	ppu_get_context()->line_sprites = 0;
+	ppu_get_context()->line_sprite_count = 0;
+
+	load_lines_sprites();
     }
 }
 void ppu_mode_xfer(Bus *bus) {
