@@ -2,7 +2,7 @@
 #define PPU_SM_H
 
 #include <setup.h>
-
+#include <bus.h>
 void ppu_mode_oam();
 void ppu_mode_xfer(Bus *bus);
 void ppu_mode_vblank(Bus *bus);
