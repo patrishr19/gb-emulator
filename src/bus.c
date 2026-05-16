@@ -118,16 +118,16 @@ void BusWrite(Bus *bus, uint16_t address, uint8_t value) {
         return;
     }
     //PRINT
-    if (address == 0xFF02 && value == 0x81) {
-        printf("%c", bus->io.registers[0x01]);
-        fflush(stdout);
-
-
-        IOWrite(&bus->io, 0x02, value & 0x7F);
-        bus->io.registers[0x0F] |= 0x08;
-        bus->io.registers[0xFF] |= 0x08; 
-        return; 
-    }
+    // if (address == 0xFF02 && value == 0x81) {
+    //     printf("%c", bus->io.registers[0x01]);
+    //     fflush(stdout);
+    //
+    //
+    //     IOWrite(&bus->io, 0x02, value & 0x7F);
+    //     bus->io.registers[0x0F] |= 0x08;
+    //     bus->io.registers[0xFF] |= 0x08; 
+    //     return; 
+    // }
 
     //IO registers
     if (address < 0xFFFF) {
