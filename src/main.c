@@ -1,3 +1,4 @@
+#include "gamepad.h"
 #include <raylib.h>
 #include <setup.h>
 #include <emulator.h>
@@ -59,6 +60,17 @@ int main(int argc, char *argv[]) {
     
     while (running && !WindowShouldClose()) {
         uint32_t prev_frame = ppu_get_context()->current_frame;
+	
+	//input
+	gamepad_get_state()->up = IsKeyDown(KEY_UP); 
+        gamepad_get_state()->down = IsKeyDown(KEY_DOWN); 
+        gamepad_get_state()->left = IsKeyDown(KEY_LEFT);
+        gamepad_get_state()->right = IsKeyDown(KEY_RIGHT); 
+        gamepad_get_state()->b = IsKeyDown(KEY_Z); 
+        gamepad_get_state()->a = IsKeyDown(KEY_X); 
+        gamepad_get_state()->start = IsKeyDown(KEY_ENTER); 
+        gamepad_get_state()->select = IsKeyDown(KEY_TAB);
+
 
         while (prev_frame == ppu_get_context()->current_frame) {
             int cycles = CPUStep(&gb.cpu, &gb.bus);
@@ -84,6 +96,7 @@ int main(int argc, char *argv[]) {
 
     }
     UnloadTexture(screen_texture);
+    UnloadImage(screen_img);
     CloseWindow();
     //free
 
