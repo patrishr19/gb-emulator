@@ -1,5 +1,4 @@
-#ifndef EMULATOR_H
-#define EMULATOR_H
+#pragma once
 
 #include <setup.h>
 #include <cpu.h>
@@ -10,4 +9,3 @@ typedef struct{
     Bus bus;
 } Gameboy;
 
-#endif

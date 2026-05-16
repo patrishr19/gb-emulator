@@ -1,9 +1,7 @@
-#ifndef ROM_H
-#define ROM_H
+#pragma once
 
 #include <setup.h>
 #include <bus.h>
 
 bool LoadRom(Bus *bus, char *filename);
 
-#endif

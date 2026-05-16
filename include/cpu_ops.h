@@ -1,5 +1,4 @@
-#ifndef CPU_OPS_H
-#define CPU_OPS_H
+#pragma once
 
 #include "cpu.h"
 #include "bus.h"
@@ -33,4 +32,3 @@ void op_call(CPU *cpu, Bus *bus);
 void op_ret(CPU *cpu, Bus *bus);
 
 void op_rst(CPU *cpu, Bus *bus, uint16_t address);
-#endif

@@ -1,5 +1,4 @@
-#ifndef CPU_H
-#define CPU_H
+#pragma once
 
 #include <setup.h>
 #include <bus.h>
@@ -63,4 +62,3 @@ void flagSet(CPU *cpu, uint8_t flag, bool value);
 
 bool flagGet(CPU *cpu, uint8_t flag);
 
-#endif

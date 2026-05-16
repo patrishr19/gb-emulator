@@ -1,5 +1,4 @@
-#ifndef PPU_H
-#define PPU_H
+#pragma once
 
 #include <setup.h>
 #include <bus.h>
@@ -98,4 +97,3 @@ void request_interrupt(Bus *bus, uint8_t interruptBit);
 
 void pipeline_process(Bus *bus);
 void pipeline_fifo_reset();
-#endif

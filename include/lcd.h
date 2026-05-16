@@ -1,6 +1,4 @@
-#ifndef LCD_H
-#define LCD_H
-
+#pragma once
 #include <setup.h>
 
 typedef struct {
@@ -63,4 +61,3 @@ uint8_t lcd_read(uint16_t address);
 void lcd_write(uint16_t address, uint8_t value);
 
 
-#endif
