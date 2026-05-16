@@ -25,6 +25,7 @@ int main(int argc, char *argv[]) {
     bool running = false;
 
     if (argc < 2) {
+	printf("Emulator needs a rom path argument\nexample: ./emulator path/to/rom/game.gb\n");
         return 1;
     }
 
