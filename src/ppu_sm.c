@@ -6,7 +6,17 @@
 #include <iogm.h>
 #include <stdint.h>
 
+
+bool window_visible();
+
 void increment_ly(Bus *bus) {
+    if (window_visible() && lcd_get_context()->ly >= lcd_get_context()->win_y &&
+	lcd_get_context()->ly < lcd_get_context()->win_y + YRES
+    ) {
+	ppu_get_context()->window_line++;
+    }
+
+
     lcd_get_context()->ly++;
 
     if (lcd_get_context()->ly == lcd_get_context()->ly_compare) {
@@ -117,6 +127,7 @@ void ppu_mode_vblank(Bus *bus) {
         if (lcd_get_context()->ly >= 154) {
             LCDS_MODE_SET(MODE_OAM);
             lcd_get_context()->ly = 0;
+	    ppu_get_context()->window_line = 0;
         }
 
         ppu_get_context()->line_ticks = 0;
