@@ -7,7 +7,7 @@
 #include <dma.h>
 #include <ppu.h>
 #include <lcd.h>
-
+#include "raygui.h"
 void print_cpu_status(Gameboy *gb) {
     printf("PC: 0x%04X | AF: 0x%02X%02X | BC: 0x%02X%02X | DE: 0x%02X%02X | HL: 0x%02X%02X | LY: %03d | Mode: %d\n",
     gb->cpu.pc, gb->cpu.a, gb->cpu.f, gb->cpu.b, gb->cpu.c, gb->cpu.d, gb->cpu.e, gb->cpu.h, gb->cpu.l, lcd_get_context()->ly, LCDS_MODE 
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     }
 
     //WINDOW
-    const int scale = 4;
+    const int scale = 6;
     InitWindow(XRES * scale, YRES * scale, "gb-emulator");
     SetTargetFPS(60);
 
@@ -61,16 +61,28 @@ int main(int argc, char *argv[]) {
     while (running && !WindowShouldClose()) {
         uint32_t prev_frame = ppu_get_context()->current_frame;
 	
-	//input
-	gamepad_get_state()->up = IsKeyDown(KEY_UP); 
-        gamepad_get_state()->down = IsKeyDown(KEY_DOWN); 
-        gamepad_get_state()->left = IsKeyDown(KEY_LEFT);
-        gamepad_get_state()->right = IsKeyDown(KEY_RIGHT); 
-        gamepad_get_state()->b = IsKeyDown(KEY_Z); 
-        gamepad_get_state()->a = IsKeyDown(KEY_X); 
-        gamepad_get_state()->start = IsKeyDown(KEY_ENTER); 
-        gamepad_get_state()->select = IsKeyDown(KEY_TAB);
 
+	//input
+	int gamepad_id = 0;	
+	if (IsGamepadAvailable(gamepad_id)) {
+	    gamepad_get_state()->up = IsKeyDown(KEY_UP) || IsGamepadButtonDown(gamepad_id, GAMEPAD_BUTTON_LEFT_FACE_UP); 
+	    gamepad_get_state()->down = IsKeyDown(KEY_DOWN) || IsGamepadButtonDown(gamepad_id, GAMEPAD_BUTTON_LEFT_FACE_DOWN); 
+	    gamepad_get_state()->left = IsKeyDown(KEY_LEFT) || IsGamepadButtonDown(gamepad_id, GAMEPAD_BUTTON_LEFT_FACE_LEFT);
+	    gamepad_get_state()->right = IsKeyDown(KEY_RIGHT) || IsGamepadButtonDown(gamepad_id, GAMEPAD_BUTTON_LEFT_FACE_RIGHT); 
+	    gamepad_get_state()->b = IsKeyDown(KEY_Z) || IsGamepadButtonDown(gamepad_id, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT); 
+	    gamepad_get_state()->a = IsKeyDown(KEY_X) || IsGamepadButtonDown(gamepad_id, GAMEPAD_BUTTON_RIGHT_FACE_DOWN); 
+	    gamepad_get_state()->start = IsKeyDown(KEY_ENTER) || IsGamepadButtonDown(gamepad_id, GAMEPAD_BUTTON_MIDDLE_RIGHT); 
+	    gamepad_get_state()->select = IsKeyDown(KEY_TAB) || IsGamepadButtonDown(gamepad_id, GAMEPAD_BUTTON_MIDDLE_LEFT);
+	} else {
+	    gamepad_get_state()->up = IsKeyDown(KEY_UP); 
+	    gamepad_get_state()->down = IsKeyDown(KEY_DOWN); 
+	    gamepad_get_state()->left = IsKeyDown(KEY_LEFT);
+	    gamepad_get_state()->right = IsKeyDown(KEY_RIGHT); 
+	    gamepad_get_state()->b = IsKeyDown(KEY_Z); 
+	    gamepad_get_state()->a = IsKeyDown(KEY_X); 
+	    gamepad_get_state()->start = IsKeyDown(KEY_ENTER); 
+	    gamepad_get_state()->select = IsKeyDown(KEY_TAB);
+	}
 
         while (prev_frame == ppu_get_context()->current_frame) {
             int cycles = CPUStep(&gb.cpu, &gb.bus);
