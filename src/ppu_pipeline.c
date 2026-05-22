@@ -174,9 +174,9 @@ void pipeline_load_window_tile(Bus *bus) {
 		((ppu_get_context()->pfc.fetch_x + 7 - lcd_get_context()->win_x) / 8) 
 		+ (w_tile_y * 32)));
 
-	    if (LCDC_BGW_DATA_AREA == 0x8800) {
-		ppu_get_context()->pfc.bgw_fetch_data[0] += 128;
-	    }
+		//    if (LCDC_BGW_DATA_AREA == 0x8800) {
+		// ppu_get_context()->pfc.bgw_fetch_data[0] += 128;
+		//    }
 	}
     }
 }
@@ -189,12 +189,12 @@ void pipeline_fetch(Bus *bus) {
                 (ppu_get_context()->pfc.map_x / 8) + 
                 ((ppu_get_context()->pfc.map_y / 8) * 32)));
                 
-                if (LCDC_BGW_DATA_AREA == 0x8800) {
-                    ppu_get_context()->pfc.bgw_fetch_data[0] += 128;
-                    // int8_t signed_int = (int8_t)ppu_get_context()->pfc.bgw_fetch_data[0];
-                    // ppu_get_context()->pfc.bgw_fetch_data[0] = (uint8_t)(signed_int + 128);
-                    // ppu_get_context()->pfc.bgw_fetch_data[0] += 28;
-                }
+                // if (LCDC_BGW_DATA_AREA == 0x8800) {
+                //     ppu_get_context()->pfc.bgw_fetch_data[0] += 128;
+                //     // int8_t signed_int = (int8_t)ppu_get_context()->pfc.bgw_fetch_data[0];
+                //     // ppu_get_context()->pfc.bgw_fetch_data[0] = (uint8_t)(signed_int + 128);
+                //     // ppu_get_context()->pfc.bgw_fetch_data[0] += 28;
+                // }
 
 		pipeline_load_window_tile(bus);
 
@@ -207,18 +207,49 @@ void pipeline_fetch(Bus *bus) {
             ppu_get_context()->pfc.fetch_x += 8;
         } break;
         case FS_DATA0: {
-            ppu_get_context()->pfc.bgw_fetch_data[1] = BusRead(bus, (LCDC_BGW_DATA_AREA + (ppu_get_context()->pfc.bgw_fetch_data[0] * 16) + ppu_get_context()->pfc.tile_y));
+	    uint8_t tile_index = ppu_get_context()->pfc.bgw_fetch_data[0];
+	    uint16_t tile_data_base;
+
+	    if (BIT(lcd_get_context()->lcdc, 4)) {
+		tile_data_base = 0x8000 + (tile_index * 16);
+	    } else {
+		int8_t s_index = (int8_t)tile_index;
+		tile_data_base = 0x9000 + (s_index * 16);
+	    }
+	    
+	    uint16_t address = tile_data_base + ppu_get_context()->pfc.tile_y;
+	    ppu_get_context()->pfc.bgw_fetch_data[1] = ppu_vram_read(address);
 
 	    pipeline_load_sprite_data(0, bus);
-
-            ppu_get_context()->pfc.cur_fetch_state = FS_DATA1;
+	    ppu_get_context()->pfc.cur_fetch_state = FS_DATA1;
+	    //
+	    //        ppu_get_context()->pfc.bgw_fetch_data[1] = BusRead(bus, (LCDC_BGW_DATA_AREA + (ppu_get_context()->pfc.bgw_fetch_data[0] * 16) + ppu_get_context()->pfc.tile_y));
+	    //
+	    // pipeline_load_sprite_data(0, bus);
+	    //
+	    //        ppu_get_context()->pfc.cur_fetch_state = FS_DATA1;
         } break;
         case FS_DATA1: {
-            ppu_get_context()->pfc.bgw_fetch_data[2] = BusRead(bus, (LCDC_BGW_DATA_AREA + (ppu_get_context()->pfc.bgw_fetch_data[0] * 16) + ppu_get_context()->pfc.tile_y + 1));
+	    uint8_t tile_index = ppu_get_context()->pfc.bgw_fetch_data[0];
+	    uint16_t tile_data_base;
+
+	    if (BIT(lcd_get_context()->lcdc, 4)) {
+		tile_data_base = 0x8000 + (tile_index * 16);
+	    } else {
+		int8_t s_index = (int8_t)tile_index;
+		tile_data_base = 0x9000 + (s_index * 16);
+	    }
+
+	    uint16_t address = tile_data_base + ppu_get_context()->pfc.tile_y + 1;
+	    ppu_get_context()->pfc.bgw_fetch_data[2] = ppu_vram_read(address);
 
 	    pipeline_load_sprite_data(1, bus);
-
-            ppu_get_context()->pfc.cur_fetch_state = FS_IDLE;
+	    ppu_get_context()->pfc.cur_fetch_state = FS_IDLE;
+	    //        ppu_get_context()->pfc.bgw_fetch_data[2] = BusRead(bus, (LCDC_BGW_DATA_AREA + (ppu_get_context()->pfc.bgw_fetch_data[0] * 16) + ppu_get_context()->pfc.tile_y + 1));
+	    //
+	    // pipeline_load_sprite_data(1, bus);
+	    //
+	    //        ppu_get_context()->pfc.cur_fetch_state = FS_IDLE;
         } break;
         case FS_IDLE: {
             ppu_get_context()->pfc.cur_fetch_state = FS_PUSH;
