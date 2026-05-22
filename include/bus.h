@@ -10,6 +10,7 @@ typedef struct{
     uint8_t current_bank;
     uint8_t bank_upper;
     uint8_t banking_mode;
+    uint8_t ram_enabled;
 } Bus;
 
 uint8_t BusRead(Bus *bus, uint16_t address);

@@ -11,17 +11,23 @@ uint8_t BusRead(Bus *bus, uint16_t address) {
     }
     //ROM BANK 0
     if (address < 0x4000) {
-        return bus->memory[address];
+	uint32_t bank = 0;
+	if (bus->banking_mode == 1) {
+	    bank = (bus->bank_upper << 5);
+	}
+        return bus->memory[address + (bank * 0x4000)];
     }
     //ROM BANK X
-    if (address >= 0x4000 && address < 0x8000) {
-        uint8_t ef_bank = bus->current_bank | (bus->bank_upper << 5);
-        if (ef_bank == 0) ef_bank = 1;
+    if (address < 0x8000) {
+	uint32_t bank = bus->current_bank;
+	if (bus->banking_mode == 0) {
+	    bank |= (bus->bank_upper << 5);
+	}
 
-        uint32_t offset = (address - 0x4000) + ((uint32_t)ef_bank * 0x4000);
-        if (offset >= 0x200000) return 0xFF;
+	uint32_t offset = (address - 0x4000) + (bank * 0x4000);
+	if (offset >= 0x200000) return 0xFF;
 
-        return bus->memory[offset];
+	return bus->memory[offset];
     }
     //VRAM
     if (address < 0xA000) {
@@ -30,7 +36,15 @@ uint8_t BusRead(Bus *bus, uint16_t address) {
     }
     //EXTERNAL CART RAM
     if (address < 0xC000) {
-        return bus->memory[0x100000 + (address - 0xA000)]; //shitty ahh method but works
+	if (!bus->ram_enabled) {
+	    return 0xFF;
+	}
+	uint32_t ram_bank = 0;
+	if (bus->banking_mode == 1) {
+	    ram_bank = bus->bank_upper;
+	}
+
+	return bus->memory[0x100000 + (ram_bank * 0x2000) + (address - 0xA000)];
     }
     //WRAM
     if (address < 0xE000) {
@@ -38,7 +52,8 @@ uint8_t BusRead(Bus *bus, uint16_t address) {
     }
     //ECHORAM
     if (address < 0xFE00) {
-        return bus->memory[address < 0x2000];
+        // return bus->memory[address < 0x2000];
+	return bus->memory[0x110000 + (address - 0xE000)];
     }
     //OAM
     if (address < 0xFEA0) {
@@ -66,20 +81,25 @@ void BusWrite(Bus *bus, uint16_t address, uint8_t value) {
         bus->io.registers[0x04] = 0;
         return;
     }
-    //MBC Banking
-    if (address >= 0x2000 && address < 0x4000) {
+
+    // MBC
+    if (address < 0x2000) {
+	bus->ram_enabled = ((value & 0x0F) == 0x0A) ? 1 : 0;
+	return;
+    }
+    if (address < 0x4000) {
         uint8_t bank = value & 0x1F;
         if (bank == 0) bank = 1;
         bus->current_bank = bank;
         return;
     }
-    if (address >= 0x4000 && address < 0x6000) {
-        bus->bank_upper = value & 0x03;
-        return;
+    if (address < 0x6000) {
+	bus->bank_upper = value & 0x03;
+	return;
     }
-    if (address >= 0x6000 && address < 0x8000) {
-        bus->banking_mode = value & 0x01;
-        return;
+    if (address < 0x8000) {
+	bus->banking_mode = value & 0x01;
+	return;
     }
     //ROM - no writes
     if (address < 0x8000) {
@@ -92,7 +112,13 @@ void BusWrite(Bus *bus, uint16_t address, uint8_t value) {
     }
     //EXTERNAL RAM
     if (address < 0xC000) {
-        bus->memory[0x100000 + (address - 0xA000)] = value; //shitty ahh method but works
+	if (!bus->ram_enabled) return;
+
+	uint32_t ram_bank = 0;
+	if (bus->banking_mode == 1) {
+	    ram_bank = bus->bank_upper;
+	}
+	bus->memory[0x100000 + (ram_bank * 0x2000) + (address - 0xA000)] = value;
         return;
     }
     //WRAM
@@ -102,7 +128,7 @@ void BusWrite(Bus *bus, uint16_t address, uint8_t value) {
     }
     //ECHORAM
     if (address < 0xFE00) {
-        bus->memory[address - 0x2000] = value;
+	bus->memory[0x110000 + (address - 0xE000)] = value;
         return;
     }
     // OAM
