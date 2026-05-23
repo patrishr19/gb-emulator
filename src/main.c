@@ -126,12 +126,19 @@ int main(int argc, char *argv[]) {
 
 	if (active_dropdown_menu == 0) {
 	    if (GuiButton((Rectangle){ 0, MENU_HEIGHT, 80, 28 }, "Load ROM")) {
-		if (LoadRom(&gb.bus, "tetris.gb")) {
-		    gb.bus.current_bank = 1;
-		    gb.bus.internal_divider = 0;
-		    CPUInit(&gb.cpu);
-		    IOInit(&gb.bus.io);
-		    rom_loaded = true;
+		const char *selected_rom = select_rom_dialog();
+
+		if (selected_rom != NULL && selected_rom[0] != '\0') {
+		    if (LoadRom(&gb.bus, selected_rom)) {
+			gb.bus.current_bank = 1;
+			gb.bus.internal_divider = 0;
+			CPUInit(&gb.cpu);
+			IOInit(&gb.bus.io);
+			rom_loaded = true;
+			printf("Loaded ROM: %s\n", selected_rom);
+		    } else {
+			printf("Failed to load ROM: %s\n", selected_rom);
+		    }
 		}
 		active_dropdown_menu = -1;
 	    }

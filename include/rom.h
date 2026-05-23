@@ -3,5 +3,7 @@
 #include <setup.h>
 #include <bus.h>
 
-bool LoadRom(Bus *bus, char *filename);
+bool LoadRom(Bus *bus, const char *filename);
+
+const char *select_rom_dialog();
 
