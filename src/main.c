@@ -29,13 +29,9 @@ int main(int argc, char *argv[]) {
     ppu_init();
     IOInit(&gb.bus.io);
 
-
-    //    if (argc < 2) {
-    // printf("Emulator needs a rom path argument\nexample: ./emulator path/to/rom/game.gb\n");
-    //        return 1;
-    //    }
     //WINDOW
-    const int scale = 6;
+    int scale = 1;
+
     InitWindow(XRES * scale, (YRES * scale) + MENU_HEIGHT, "gb-emulator");
     SetTargetFPS(60);
     
@@ -60,6 +56,19 @@ int main(int argc, char *argv[]) {
     }
 
     while (!WindowShouldClose()) {
+	if (IsWindowResized()) {
+	    int current_width = GetScreenWidth();
+	    if (current_width > 0 && current_width != (XRES * scale)) {
+		int new_scale = current_width / XRES;
+		if (new_scale >= 1) {
+		    scale = new_scale;
+		    SetWindowMinSize(XRES * scale, (YRES * scale) + MENU_HEIGHT);
+		}
+	    }
+
+	    scale = GetScreenWidth() / XRES;
+	    if (scale < 1) scale = 1;
+	}
 	if (rom_loaded) {
 	    //input
 	    int gamepad_id = 0;	
@@ -98,13 +107,19 @@ int main(int argc, char *argv[]) {
 	    print_cpu_status(&gb);
 	}
 
-	if (active_dropdown_menu == 0 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+	if (active_dropdown_menu != -1 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
 	    int mouse_x = GetMouseX();
 	    int mouse_y = GetMouseY();
+	    bool is_in_menu = false;
 
-	    // Bounding Box of the active menu block (Width: 0-130, Height: 0 to MENU_HEIGHT + 2 items * 28px)
-	    if (!(mouse_x >= 0 && mouse_x <= 130 && mouse_y >= 0 && mouse_y <= (MENU_HEIGHT + 56))) {
-		active_dropdown_menu = -1; 
+	    if (active_dropdown_menu == 0) {
+		is_in_menu = (mouse_x >= 0 && mouse_x <= 80 && mouse_y >= 0 && mouse_y <= (MENU_HEIGHT + 56));
+	    } else if (active_dropdown_menu == 1) {
+		is_in_menu = (mouse_x >= 80 && mouse_x <= 160 && mouse_y >= 0 && mouse_y <= (MENU_HEIGHT + 168));
+	    }
+
+	    if (!is_in_menu) {
+		active_dropdown_menu = -1;
 	    }
 	}
 
@@ -122,6 +137,10 @@ int main(int argc, char *argv[]) {
 	
 	if (GuiButton((Rectangle){0, 0, 80, MENU_HEIGHT}, "File")) {
 	    active_dropdown_menu = (active_dropdown_menu == 0) ? -1 : 0;
+	}
+
+	if (GuiButton((Rectangle){80, 0, 80, MENU_HEIGHT}, "View")) {
+	    active_dropdown_menu = (active_dropdown_menu == 1) ? -1 : 1;
 	}
 
 	if (active_dropdown_menu == 0) {
@@ -148,38 +167,52 @@ int main(int argc, char *argv[]) {
 		return 0;
 	    }
 	}
+	
+	if (active_dropdown_menu == 1) {
+	    if (GuiButton((Rectangle){80, MENU_HEIGHT, 80, 28}, "1X")) {
+		scale = 1;
+		SetWindowMinSize(XRES * scale, (YRES * scale) + MENU_HEIGHT);
+		SetWindowSize(XRES * scale, (YRES * scale) + MENU_HEIGHT);
+		active_dropdown_menu = -1;
+	    }
+	    if (GuiButton((Rectangle){80, MENU_HEIGHT + 28, 80, 28}, "2X")) {
+		scale = 2;
+		SetWindowMinSize(XRES * scale, (YRES * scale) + MENU_HEIGHT);
+		SetWindowSize(XRES * scale, (YRES * scale) + MENU_HEIGHT);
+		active_dropdown_menu = -1;
+	    }
+	    if (GuiButton((Rectangle){80, MENU_HEIGHT + 56, 80, 28}, "3X")) {
+		scale = 3;
+		SetWindowMinSize(XRES * scale, (YRES * scale) + MENU_HEIGHT);
+		SetWindowSize(XRES * scale, (YRES * scale) + MENU_HEIGHT);
+		active_dropdown_menu = -1;
+	    }
+	    if (GuiButton((Rectangle){80, MENU_HEIGHT + 84, 80, 28}, "4X")) {
+		scale = 4;
+		SetWindowMinSize(XRES * scale, (YRES * scale) + MENU_HEIGHT);
+		SetWindowSize(XRES * scale, (YRES * scale) + MENU_HEIGHT);
+		active_dropdown_menu = -1;
+	    }
+	    if (GuiButton((Rectangle){80, MENU_HEIGHT + 112, 80, 28}, "5X")) {
+		scale = 5;
+		SetWindowMinSize(XRES * scale, (YRES * scale) + MENU_HEIGHT);
+		SetWindowSize(XRES * scale, (YRES * scale) + MENU_HEIGHT);
+		active_dropdown_menu = -1;
+	    }
+	    if (GuiButton((Rectangle){80, MENU_HEIGHT + 140, 80, 28}, "6X")) {
+		scale = 6;
+		SetWindowMinSize(XRES * scale, (YRES * scale) + MENU_HEIGHT);
+		SetWindowSize(XRES * scale, (YRES * scale) + MENU_HEIGHT);
+		active_dropdown_menu = -1;
+	    }
+	}
+
+
 	DrawFPS(GetScreenWidth() - 80, 4);
 	EndDrawing();
     }
 
-    // if (LoadRom(&gb.bus, argv[1])) {
-    //     printf("Loaded: %s\n", argv[1]);
-    //     printf("Game: ");
-    //     for (uint16_t i = 0x0134; i <= 0x0143; i++) { // 16 chars
-    //         printf("%c", gb.bus.memory[i]);
-    //     }
-    //     printf("\n");
-    //     running = true;
-    // } else {
-    //     printf("Failed to load: %s\n", argv[1]);
-    //     running = false;
-    // }
-    
-    // while (running && !WindowShouldClose()) {
-    //
-    //     //DRAW
-    //
-    //     BeginDrawing();
-    //
-    //     ClearBackground(BLACK);
-    //     DrawTextureEx(screen_texture, (Vector2){0, 0}, 0.0f, (float)scale, WHITE);
-    //     DrawFPS(10, 10);
-    //     EndDrawing();
-    //
-    //
-    // }
     UnloadTexture(screen_texture);
-    // UnloadImage(screen_img);
     CloseWindow();
     return 0;
 }
