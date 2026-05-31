@@ -1,3 +1,8 @@
+/**
+ * @file rom.h
+ * @brief ROM file loading
+ * */
+
 #pragma once
 
 #include <setup.h>

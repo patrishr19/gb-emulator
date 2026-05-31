@@ -9,5 +9,6 @@ output.txt
 *.gb
 gb-test-roms-master/
 compile_commands.json
-
+docs/
+latex/
 !test/blargg/**/*.gb

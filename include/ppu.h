@@ -1,3 +1,8 @@
+/**
+ * @file ppu.h
+ * @brief Main pixel processing unit
+ * */
+
 #pragma once
 
 #include <setup.h>
@@ -8,7 +13,9 @@ static const int TICKS_PER_LINE = 456;
 static const int YRES = 144;
 static const int XRES = 160;
 
-
+/**
+ * @brief states for pixel fetcher
+ * */
 typedef enum {
     FS_TILE,
     FS_DATA0,
@@ -17,18 +24,25 @@ typedef enum {
     FS_PUSH
 } fetch_state;
 
-
+/**
+ * @brief Pixel node in the fifo queue
+ * */
 typedef struct fifo_entry{
     struct fifo_entry *next;
     uint32_t value;
 } fifo_entry;
-
+/**
+ * @brief Queue struct managing pixels waiting to be pushed
+ * */
 typedef struct {
     fifo_entry *head;
     fifo_entry *tail;
     uint32_t  size;
 } fifo;
 
+/**
+ * @brief Pipeline state context for fetching and pushing pixels
+ * */
 typedef struct {
     fetch_state cur_fetch_state;
     fifo pixel_fifo;
@@ -43,6 +57,10 @@ typedef struct {
     uint8_t fifo_x;
 } pixel_fifo_context;
 
+
+/**
+ * @brief Object attribute memory layout for a sprite
+ * */
 typedef struct {
     uint8_t y;
     uint8_t x;
@@ -57,11 +75,18 @@ typedef struct {
 
 } oam_entry;
 
+/**
+ * @brief Linked list tracking sprite structures
+ * */
 typedef struct _oam_line_entry {
     oam_entry entry;
     struct _oam_line_entry *next;
 } oam_line_entry;
 
+
+/**
+ * @brief Global registry containging data spaces for ppu
+ * */
 typedef struct {
     oam_entry oam_ram[40];
     uint8_t vram[0x2000];
@@ -83,17 +108,43 @@ typedef struct {
 } ppu_context;
 
 void ppu_init();
-void ppu_tick(Bus *bus);
 
+/**
+ * @brief Steps the PPU forward by single tick
+ * */
+void ppu_tick(Bus *bus);
+/**
+ * @brief Writing bytes into OAM 
+ * */
 void ppu_oam_write(uint16_t address, uint8_t value);
+
+/**
+ * @brief Reading bytes from OAM
+ * */
 uint8_t ppu_oam_read(uint16_t address);
 
+/**
+ * @brief Writing bytes to VRAM
+ * */
 void ppu_vram_write(uint16_t address, uint8_t value);
+/**
+ * @brief Reading bytes from VRAM
+ * */
 uint8_t ppu_vram_read(uint16_t address);
 
 ppu_context *ppu_get_context();
 
+/**
+ * @brief Triggers a signal request flag inside the IF interrupt register
+ * */
 void request_interrupt(Bus *bus, uint8_t interruptBit);
 
+/**
+ * @brief Steps the clock cycle operations of the pixel fetcher
+ * */
 void pipeline_process(Bus *bus);
+
+/**
+ * @brief empties the fifo queue
+ * */
 void pipeline_fifo_reset();

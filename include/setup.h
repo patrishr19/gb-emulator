@@ -1,3 +1,8 @@
+/**
+ * @file setup.h
+ * @brief SETUP
+ * */
+
 #pragma once
 
 #include <stdint.h>

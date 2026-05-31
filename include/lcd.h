@@ -1,6 +1,13 @@
+/**
+ * @file lcd.h
+ * @brief Graphics hardware registers
+ * */
+
 #pragma once
 #include <setup.h>
-
+/**
+ * @brief Struct holding the state of LCD registers
+ * */
 typedef struct {
     //registers
     uint8_t lcdc;
@@ -21,6 +28,9 @@ typedef struct {
     uint32_t sp2_colors[4];
 } lcd_context;
 
+/**
+ * @brief Modes of the PPU during scanline
+ * */
 typedef enum {
     MODE_HBLANK,
     MODE_VBLANK,
@@ -56,8 +66,14 @@ typedef enum {
 
 void lcd_init();
 
+/**
+ * @brief Fetching register values in the lcd space
+ * */
 uint8_t lcd_read(uint16_t address);
 
+/**
+ * @brief Writing new values to the lcd space
+ * */
 void lcd_write(uint16_t address, uint8_t value);
 
 

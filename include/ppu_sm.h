@@ -1,3 +1,8 @@
+/**
+ * @file ppu_sm.h
+ * @brief States implementation for PPU
+ * */
+
 #pragma once
 
 #include <setup.h>
