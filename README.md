@@ -83,6 +83,10 @@ Rebuild
 make clean
 make
 ```
-
+#### Generating docs
+```bash
+# Needs doxygen installed
+doxygen Doxyfile
+```
 #### Note
 - I do not provide any ROM files
