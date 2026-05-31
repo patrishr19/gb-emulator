@@ -1,7 +1,7 @@
 /**
  * @file cpu_ops.h
  * @brief CPU opcode executions
- * */
+ */
 #pragma once
 
 #include "cpu.h"

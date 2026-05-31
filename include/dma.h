@@ -1,7 +1,7 @@
 /**
  * @file dma.h
  * @brief Direct memory access pipeline
- * */
+ */
 #pragma once
 #include <setup.h>
 #include <bus.h>

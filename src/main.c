@@ -1,3 +1,4 @@
+#include "cpu.h"
 #include "gamepad.h"
 #include <raylib.h>
 #include <setup.h>
@@ -10,9 +11,18 @@
 
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
+#undef RAYGUI_IMPLEMENTATION
+
+#define GUI_WINDOW_FILE_DIALOG_IMPLEMENTATION
+#include "gui_window_file_dialog.h"
 
 #define MENU_HEIGHT 24
 
+#if defined(_WIN32) || defined(_WIN64)
+    #define PATH_SEPARATOR "\\"
+#else
+    #define PATH_SEPARATOR "/"
+#endif
 
 void print_cpu_status(Gameboy *gb) {
     printf("PC: 0x%04X | AF: 0x%02X%02X | BC: 0x%02X%02X | DE: 0x%02X%02X | HL: 0x%02X%02X | LY: %03d | Mode: %d\n",
@@ -55,6 +65,8 @@ int main(int argc, char *argv[]) {
 	}
     }
 
+    GuiWindowFileDialogState fileDialogState = InitGuiWindowFileDialog(GetWorkingDirectory());
+
     while (!WindowShouldClose()) {
 	if (IsWindowResized()) {
 	    int current_width = GetScreenWidth();
@@ -69,7 +81,29 @@ int main(int argc, char *argv[]) {
 	    scale = GetScreenWidth() / XRES;
 	    if (scale < 1) scale = 1;
 	}
-	if (rom_loaded) {
+
+	if (fileDialogState.SelectFilePressed) {
+	    char selected_rom[1024];
+	    if (IsFileExtension(fileDialogState.fileNameText, ".gb")) {
+		strcpy(selected_rom, TextFormat("%s" PATH_SEPERATOR "%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
+	    }
+
+	    if (selected_rom[0] != '\0') {
+		if (LoadRom(&gb.bus, selected_rom)) {
+		    gb.bus.current_bank = 1;
+		    gb.bus.internal_divider = 0;
+		    CPUInit(&gb.cpu);
+		    IOInit(&gb.bus.io);
+		    rom_loaded = true;
+		    printf("Loaded ROM: %s\n", selected_rom);
+		} else {
+		    printf("Failed to load ROM: %s\n", selected_rom);
+		}
+	    }
+	    fileDialogState.SelectFilePressed = false;		
+	}
+
+	if (rom_loaded && !fileDialogState.windowActive) {
 	    //input
 	    int gamepad_id = 0;	
 	    if (IsGamepadAvailable(gamepad_id)) {
@@ -133,6 +167,8 @@ int main(int argc, char *argv[]) {
 	    DrawText(text, (GetScreenWidth() / 2) - (MeasureText(text, 20) / 2), (GetScreenHeight() / 2), 20, WHITE);
 	}
 	
+	if (fileDialogState.windowActive) GuiLock();
+
 	GuiPanel((Rectangle){ 0, 0, (float)GetScreenWidth(), MENU_HEIGHT }, NULL);
 	
 	if (GuiButton((Rectangle){0, 0, 80, MENU_HEIGHT}, "File")) {
@@ -145,20 +181,7 @@ int main(int argc, char *argv[]) {
 
 	if (active_dropdown_menu == 0) {
 	    if (GuiButton((Rectangle){ 0, MENU_HEIGHT, 80, 28 }, "Load ROM")) {
-		const char *selected_rom = select_rom_dialog();
-
-		if (selected_rom != NULL && selected_rom[0] != '\0') {
-		    if (LoadRom(&gb.bus, selected_rom)) {
-			gb.bus.current_bank = 1;
-			gb.bus.internal_divider = 0;
-			CPUInit(&gb.cpu);
-			IOInit(&gb.bus.io);
-			rom_loaded = true;
-			printf("Loaded ROM: %s\n", selected_rom);
-		    } else {
-			printf("Failed to load ROM: %s\n", selected_rom);
-		    }
-		}
+		fileDialogState.windowActive = true;
 		active_dropdown_menu = -1;
 	    }
 	    if (GuiButton((Rectangle){ 0, MENU_HEIGHT + 28, 80, 28 }, "Exit")) {
@@ -206,7 +229,10 @@ int main(int argc, char *argv[]) {
 		active_dropdown_menu = -1;
 	    }
 	}
+	
+	GuiUnlock();
 
+	GuiWindowFileDialog(&fileDialogState);
 
 	DrawFPS(GetScreenWidth() - 80, 4);
 	EndDrawing();
