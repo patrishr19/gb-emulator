@@ -11,17 +11,40 @@ I'm currently using the [pandocs](https://gbdev.io/pandocs/About.html) as my sou
 ## Goal
 The final product should be a executable file for Linux and Windows and maybe some linked libraries.
 
+## Input
+- Arrow keys: move
+- Enter: start
+- Tab: select
+- Z: B
+- X: A
+
+## Current state
+- [X] Rendering
+- [X] Input
+- [X] Xbox Xinput support
+- [X] Loading custom rom via file context window
+- [X] Scaling window option
+- [X] Doxygen docs
+- [X] Github release 
+- [] Controls keybinds setting
+- [] Sound
+- [] Windows native support
+- [] MBC1 Games full support (pokemon games don't work)
+- [] Saving/Loading states
+- [] Game speed modification
+
+
 ## Ideas for the future
-- Add a navigation bar on top that would bring easy access to the settings, saving and restarting
-- Saving and loading states
-- Xinput controller support
-- Game speed modification (0.5, 1, 2)
-- Settings
-	- Keybind changes
-	- Preferences
+- ~~Add a navigation bar on top that would bring easy access to the settings, saving and restarting~~
+- ~~Saving and loading states~~
+- ~~Xinput controller support~~
+- ~~Game speed modification (0.5, 1, 2)~~
+- ~~Settings~~
+	- ~~Keybind changes~~
+	- ~~Preferences~~
 
 ## Used libraries
-- I'm using the [Raylib](https://www.raylib.com/) library.
+- I'm using the [Raylib](https://www.raylib.com/) library + RayGUI library
 
 ## Launching the release version
 ```bash
