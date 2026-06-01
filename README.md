@@ -23,6 +23,12 @@ The final product should be a executable file for Linux and Windows and maybe so
 ## Used libraries
 - I'm using the [Raylib](https://www.raylib.com/) library.
 
+## Launching the release version
+```bash
+chmod +x gb-emulator.AppImage
+./gb-emulator.AppImage
+```
+
 ## Installation guide
 
 ```bash
