@@ -12,3 +12,5 @@ compile_commands.json
 docs/
 latex/
 !test/blargg/**/*.gb
+AppDir/
+gb-emulator
