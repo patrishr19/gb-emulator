@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
     IOInit(&gb.bus.io);
 
     //WINDOW
-    int scale = 2;
+    int scale = 4;
 
     InitWindow(XRES * scale, (YRES * scale) + MENU_HEIGHT, "gb-emulator");
     SetTargetFPS(60);

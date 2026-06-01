@@ -1,5 +1,8 @@
 # gb-emulator
 
+> [!IMPORTANT]
+> I do not provide any ROM files!
+
 Emulator of the GameBoy console, that simulates it's hardware and is able to run ROM files with the `.gb` file extension. Program is developed primarily in C. I picked up this project due to the fact that i wanted to learn about low level stuff, how different components work and mainly enhance my C knowledge.
 
 ## Documentation
@@ -88,5 +91,3 @@ make
 # Needs doxygen installed
 doxygen Doxyfile
 ```
-#### Note
-- I do not provide any ROM files
