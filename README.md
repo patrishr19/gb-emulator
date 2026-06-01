@@ -26,12 +26,12 @@ The final product should be a executable file for Linux and Windows and maybe so
 - [X] Scaling window option
 - [X] Doxygen docs
 - [X] Github release 
-- [] Controls keybinds setting
-- [] Sound
-- [] Windows native support
-- [] MBC1 Games full support (pokemon games don't work)
-- [] Saving/Loading states
-- [] Game speed modification
+- [ ] Controls keybinds setting
+- [ ] Sound
+- [ ] Windows native support
+- [ ] MBC1 Games full support (pokemon games don't work)
+- [ ] Saving/Loading states
+- [ ] Game speed modification
 
 
 ## Ideas for the future
